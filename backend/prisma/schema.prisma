@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Perusahaan {
+  id                   String         @id @default(uuid())
+  namaPerusahaan       String
+  kodePerusahaan       String         @unique
+  namaOwner            String
+  noHpOwner            String
+  alamat               String?
+  tglMulaiLangganan    DateTime       @default(now())
+  tglBerakhirLangganan DateTime
+  statusLangganan      String         @default("AKTIF") // AKTIF, EXPIRED, SUSPEND
+  tarifBulanan         Int            @default(200000)
+  createdAt            DateTime       @default(now())
+
+  admins               Admin[]
+  pakets               Paket[]
+  members              Member[]
+  transaksi            Transaksi[]
+  perpanjangan         Perpanjangan[]
+
+  @@map("perusahaans")
+}
+
+model Admin {
+  id           String         @id @default(uuid())
+  nama         String
+  username     String         @unique
+  passwordHash String
+  role         String         @default("ADMIN") // SUPER_OWNER, ADMIN, KASIR
+  perusahaanId String?
+  perusahaan   Perusahaan?    @relation(fields: [perusahaanId], references: [id], onDelete: Cascade)
+  createdAt    DateTime       @default(now())
+  transaksi    Transaksi[]
+  perpanjangan Perpanjangan[]
+
+  @@map("admins")
+}
+
+model Paket {
+  id           String         @id @default(uuid())
+  namaPaket    String
+  kuotaKg      Float
+  durasiHari   Int
+  harga        Int
+  aktif        Boolean        @default(true)
+  perusahaanId String?
+  perusahaan   Perusahaan?    @relation(fields: [perusahaanId], references: [id], onDelete: Cascade)
+  members      Member[]
+  perpanjangan Perpanjangan[]
+
+  @@map("pakets")
+}
+
+model Member {
+  id           String         @id @default(uuid())
+  nama         String
+  noHp         String
+  uidKartu     String?        @unique
+  paketId      String
+  paket        Paket          @relation(fields: [paketId], references: [id])
+  kuotaAwal    Float
+  sisaKuota    Float
+  tglMulai     DateTime
+  tglBerakhir  DateTime
+  status       String         @default("AKTIF")
+  perusahaanId String?
+  perusahaan   Perusahaan?    @relation(fields: [perusahaanId], references: [id], onDelete: Cascade)
+  createdAt    DateTime       @default(now())
+  transaksi    Transaksi[]
+  perpanjangan Perpanjangan[]
+
+  @@index([uidKartu])
+  @@map("members")
+}
+
+model Transaksi {
+  id             String      @id @default(uuid())
+  memberId       String
+  member         Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  beratKg        Float
+  sisaSebelum    Float
+  sisaSesudah    Float
+  statusCucian   String      @default("ANTRIAN") // ANTRIAN, PROSES, SIAP_AMBIL, SELESAI
+  rakPenyimpanan String?
+  tglSelesaiCuci DateTime?
+  tglDiambil     DateTime?
+  catatan        String?
+  adminId        String
+  admin          Admin       @relation(fields: [adminId], references: [id])
+  perusahaanId   String?
+  perusahaan     Perusahaan? @relation(fields: [perusahaanId], references: [id], onDelete: Cascade)
+  createdAt      DateTime    @default(now())
+
+  @@index([memberId])
+  @@map("transaksis")
+}
+
+model Perpanjangan {
+  id           String      @id @default(uuid())
+  memberId     String
+  member       Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  paketId      String
+  paket        Paket       @relation(fields: [paketId], references: [id])
+  tglMulai     DateTime
+  tglBerakhir  DateTime
+  hargaDibayar Int
+  adminId      String
+  admin        Admin       @relation(fields: [adminId], references: [id])
+  perusahaanId String?
+  perusahaan   Perusahaan? @relation(fields: [perusahaanId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+
+  @@index([memberId])
+  @@map("perpanjangans")
+}
