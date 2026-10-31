@@ -11,21 +11,26 @@ import {
   Sparkles,
   ArrowRight,
   UserCheck,
-  Copy,
-  Check,
-  ExternalLink,
-  Share2,
-  ShoppingBag,
+  Printer,
+  X,
+  CreditCard,
+  UserPlus,
 } from "lucide-react";
 import NfcScanner from "../../components/NfcScanner";
 import KartuKuota from "../../components/KartuKuota";
 import { memberApi, transaksiApi } from "../../api";
-import { formatTanggalWaktu } from "../../utils/nfcHelper";
+import { formatTanggalWaktu, formatRupiah } from "../../utils/nfcHelper";
+import { useAuth } from "../../context/AuthContext";
 
 const ScanMember = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
+  // Mode: 'MEMBER' atau 'NON_MEMBER'
+  const [modePelanggan, setModePelanggan] = useState('MEMBER');
+
+  // State Member
   const [scannedUid, setScannedUid] = useState("");
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -37,7 +42,15 @@ const ScanMember = () => {
   const [rakPenyimpanan, setRakPenyimpanan] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [transaksiSuccess, setTransaksiSuccess] = useState(null);
-  const [copiedTracking, setCopiedTracking] = useState(false);
+
+  // State Non-Member
+  const [namaNonMember, setNamaNonMember] = useState("");
+  const [noHpNonMember, setNoHpNonMember] = useState("");
+  const [tarifPerKg, setTarifPerKg] = useState(7000);
+  const [statusBayar, setStatusBayar] = useState("LUNAS");
+
+  // Modal Cetak Struk
+  const [isStrukModalOpen, setIsStrukModalOpen] = useState(false);
 
   // Jika ada query param ?uid=... dari navigasi lain
   useEffect(() => {
@@ -130,8 +143,55 @@ const ScanMember = () => {
     }
   };
 
-  // Tombol cepat berat kg untuk layar sentuh
+  const handleSimpanTransaksiNonMember = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+
+    const berat = parseFloat(beratKg);
+    if (!berat || berat <= 0) {
+      setErrorMsg("Berat cucian harus lebih dari 0 kg");
+      return;
+    }
+
+    if (!namaNonMember.trim()) {
+      setErrorMsg("Nama pelanggan non-member wajib diisi");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await transaksiApi.create({
+        jenisPelanggan: "NON_MEMBER",
+        namaPelanggan: namaNonMember.trim(),
+        noHpPelanggan: noHpNonMember.trim() || null,
+        beratKg: berat,
+        tarifPerKg: Number(tarifPerKg) || 7000,
+        statusBayar,
+        catatan,
+        rakPenyimpanan: rakPenyimpanan || null,
+      });
+
+      if (res.success && res.data) {
+        setTransaksiSuccess(res.data);
+        setNamaNonMember("");
+        setNoHpNonMember("");
+        setBeratKg("");
+        setCatatan("");
+        setRakPenyimpanan("");
+      }
+    } catch (err) {
+      setErrorMsg(err.message || "Gagal menyimpan transaksi non-member");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const presetWeights = [1.0, 2.0, 3.5, 5.0, 7.0, 10.0];
+
+  const totalBiayaNonMember =
+    beratKg && parseFloat(beratKg) > 0
+      ? Math.round(parseFloat(beratKg) * (Number(tarifPerKg) || 7000))
+      : 0;
 
   return (
     <div className="space-y-3 w-full">
@@ -139,15 +199,14 @@ const ScanMember = () => {
       <div className="bg-[#0284c7] text-white rounded-lg p-3 sm:p-3.5 shadow-sm flex items-center justify-between w-full">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0">
-            <Wifi className="w-4 h-4" />
+            <Scale className="w-4 h-4" />
           </div>
           <div>
             <h1 className="text-sm sm:text-base font-extrabold tracking-tight leading-tight">
-              Scan Kartu NFC & Input Cucian
+              Timbangan Cucian & Transaksi
             </h1>
             <p className="text-[11px] text-sky-100 leading-tight">
-              Tap kartu member, masukkan timbangan berat cucian, kuota berkurang
-              otomatis.
+              Basmalah Wash • RFID Member & Cuci Kiloan Non-Member
             </p>
           </div>
         </div>
@@ -167,8 +226,44 @@ const ScanMember = () => {
         )}
       </div>
 
-      {/* Komponen Scanner NFC */}
-      {!member && (
+      {/* Tab Pilihan: Member RFID vs Non-Member */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setModePelanggan("MEMBER");
+            setErrorMsg("");
+          }}
+          className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition ${
+            modePelanggan === "MEMBER"
+              ? "bg-sky-600 text-white shadow-sm"
+              : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
+          }`}
+        >
+          <CreditCard className="w-4 h-4" />
+          Member RFID
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setModePelanggan("NON_MEMBER");
+            setMember(null);
+            setErrorMsg("");
+          }}
+          className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition ${
+            modePelanggan === "NON_MEMBER"
+              ? "bg-emerald-600 text-white shadow-sm"
+              : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
+          }`}
+        >
+          <UserPlus className="w-4 h-4" />
+          Non-Member (Kiloan)
+        </button>
+      </div>
+
+      {/* Komponen Scanner NFC (Hanya untuk Mode Member) */}
+      {!member && modePelanggan === "MEMBER" && (
         <NfcScanner
           onScan={handleScan}
           onManualSearch={handleManualSearch}
@@ -200,40 +295,261 @@ const ScanMember = () => {
 
       {/* Hasil Transaksi Berhasil (Popup Nota) */}
       {transaksiSuccess && (
-        <div className="p-5 bg-emerald-50 border border-emerald-300 rounded-2xl shadow-sm text-emerald-900 space-y-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
-            <div>
-              <h4 className="text-base font-bold text-emerald-800">
-                Transaksi Laundry Berhasil Disimpan!
-              </h4>
-              <p className="text-xs text-emerald-700">
-                Kuota member telah otomatis dikurangi dan dicatat ke sistem.
-              </p>
+        <div className="p-4 sm:p-5 bg-emerald-50 border border-emerald-300 rounded-2xl shadow-sm text-emerald-900 space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+              <div>
+                <h4 className="text-base font-bold text-emerald-800">
+                  Transaksi Laundry Berhasil Disimpan!
+                </h4>
+                <p className="text-xs text-emerald-700">
+                  {transaksiSuccess.isNonMember
+                    ? `Transaksi cucian atas nama ${transaksiSuccess.transaksi.namaPelanggan} berhasil dicatat.`
+                    : "Kuota member telah otomatis dikurangi dan dicatat ke sistem."}
+                </p>
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setIsStrukModalOpen(true)}
+              className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              Cetak Faktur / Struk
+            </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-2.5 pt-2 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 text-xs">
             <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
               <span className="text-slate-500 block">Berat Cucian</span>
               <strong className="text-base text-slate-800 font-extrabold">
                 {parseFloat(transaksiSuccess.transaksi.beratKg).toFixed(2)} kg
               </strong>
             </div>
-            <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
-              <span className="text-slate-500 block">Sisa Sebelumnya</span>
-              <strong className="text-base text-slate-600 font-bold">
-                {parseFloat(transaksiSuccess.transaksi.sisaSebelum).toFixed(2)}{" "}
-                kg
-              </strong>
-            </div>
-            <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
-              <span className="text-slate-500 block">Sisa Sekarang</span>
-              <strong className="text-base text-emerald-600 font-extrabold">
-                {transaksiSuccess.sisaKuotaBaru} kg
-              </strong>
-            </div>
+
+            {!transaksiSuccess.isNonMember ? (
+              <>
+                <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
+                  <span className="text-slate-500 block">Sisa Sebelumnya</span>
+                  <strong className="text-base text-slate-600 font-bold">
+                    {parseFloat(transaksiSuccess.transaksi.sisaSebelum).toFixed(2)} kg
+                  </strong>
+                </div>
+                <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
+                  <span className="text-slate-500 block">Sisa Sekarang</span>
+                  <strong className="text-base text-emerald-600 font-extrabold">
+                    {transaksiSuccess.sisaKuotaBaru} kg
+                  </strong>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
+                  <span className="text-slate-500 block">Tarif per Kg</span>
+                  <strong className="text-base text-slate-700 font-bold">
+                    {formatRupiah(transaksiSuccess.transaksi.tarifPerKg || 7000)}
+                  </strong>
+                </div>
+                <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
+                  <span className="text-slate-500 block">Total Tagihan</span>
+                  <strong className="text-base text-emerald-700 font-extrabold">
+                    {formatRupiah(transaksiSuccess.transaksi.totalBayar)}
+                  </strong>
+                </div>
+              </>
+            )}
           </div>
+        </div>
+      )}
+
+      {/* MODE NON-MEMBER (FORM KILOAN UMUM) */}
+      {modePelanggan === "NON_MEMBER" && (
+        <div className="bg-white rounded-lg p-5 shadow-sm border border-slate-200 space-y-4 max-w-2xl">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg">
+                <UserPlus className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 leading-tight">
+                  Formulir Transaksi Non-Member (Kiloan Reguler)
+                </h3>
+                <p className="text-[11px] text-slate-500 leading-tight">
+                  Input cepat: Nama, berat kg, dan harga per kg
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
+              Pelanggan Umum
+            </span>
+          </div>
+
+          <form onSubmit={handleSimpanTransaksiNonMember} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Nama Pelanggan *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={namaNonMember}
+                  onChange={(e) => setNamaNonMember(e.target.value)}
+                  placeholder="Nama pemesan laundry"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  No. WhatsApp / HP (Opsional)
+                </label>
+                <input
+                  type="tel"
+                  value={noHpNonMember}
+                  onChange={(e) => setNoHpNonMember(e.target.value)}
+                  placeholder="081234567890"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Berat Cucian (kg) *
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.1"
+                  required
+                  value={beratKg}
+                  onChange={(e) => setBeratKg(e.target.value)}
+                  placeholder="0.0"
+                  className="w-full text-2xl font-black px-3.5 py-2.5 bg-slate-50 border-2 border-emerald-400 focus:border-emerald-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-200 transition"
+                />
+                <span className="absolute right-3.5 top-3 text-sm font-bold text-slate-400">
+                  kg
+                </span>
+              </div>
+
+              {/* Pintasan Berat */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase">
+                  Pintasan:
+                </span>
+                {presetWeights.map((w) => (
+                  <button
+                    key={w}
+                    type="button"
+                    onClick={() => setBeratKg(w.toString())}
+                    className={`px-2.5 py-1 text-xs font-bold rounded border transition ${
+                      beratKg === w.toString()
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                    }`}
+                  >
+                    {w} kg
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Tarif per Kg (Rp)
+                </label>
+                <input
+                  type="number"
+                  step="500"
+                  value={tarifPerKg}
+                  onChange={(e) => setTarifPerKg(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Status Pembayaran
+                </label>
+                <select
+                  value={statusBayar}
+                  onChange={(e) => setStatusBayar(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="LUNAS">✅ Lunas</option>
+                  <option value="BELUM_LUNAS">⏳ Belum Bayar</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Posisi Rak / Lokasi (Opsional)
+                </label>
+                <input
+                  type="text"
+                  value={rakPenyimpanan}
+                  onChange={(e) => setRakPenyimpanan(e.target.value)}
+                  placeholder="Misal: Rak Non-01"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Catatan Cucian (Opsional)
+                </label>
+                <input
+                  type="text"
+                  value={catatan}
+                  onChange={(e) => setCatatan(e.target.value)}
+                  placeholder="Misal: Baju 5 potong, sprei"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
+            {/* Total Bayar Box */}
+            <div className="p-3 bg-emerald-50/80 rounded-lg border border-emerald-200 flex items-center justify-between text-xs">
+              <div>
+                <span className="text-[11px] text-emerald-800 font-bold block">
+                  Total Biaya Cucian:
+                </span>
+                <span className="text-[10px] text-emerald-600">
+                  {beratKg
+                    ? `${beratKg} kg × ${formatRupiah(tarifPerKg)}`
+                    : "Masukkan berat kg"}
+                </span>
+              </div>
+              <strong className="text-emerald-800 font-extrabold text-lg">
+                {formatRupiah(totalBiayaNonMember)}
+              </strong>
+            </div>
+
+            <button
+              type="submit"
+              disabled={
+                submitting ||
+                !beratKg ||
+                parseFloat(beratKg) <= 0 ||
+                !namaNonMember.trim()
+              }
+              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] disabled:bg-slate-300 text-white font-extrabold text-sm rounded-lg shadow-sm flex items-center justify-center gap-2 transition"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>
+                {submitting
+                  ? "Menyimpan Transaksi..."
+                  : `Simpan Transaksi Non-Member (${formatRupiah(totalBiayaNonMember)})`}
+              </span>
+            </button>
+          </form>
         </div>
       )}
 
@@ -467,6 +783,167 @@ const ScanMember = () => {
                   </button>
                 </form>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CETAK STRUK / FAKTUR THERMAL */}
+      {isStrukModalOpen && transaksiSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[92vh]">
+            <div className="bg-[#0f172a] px-4 py-3 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Printer className="w-4 h-4 text-sky-400" />
+                <span className="text-xs font-black tracking-wide">
+                  Faktur / Struk Thermal
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsStrukModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto">
+              <div
+                id="printable-thermal-receipt"
+                className="bg-white p-3.5 border border-dashed border-slate-300 rounded-xl font-mono text-[11px] text-slate-900 leading-tight space-y-2 select-text"
+              >
+                <div className="text-center pb-2 border-b border-dashed border-slate-300 space-y-0.5">
+                  <div className="font-black text-sm text-slate-950 uppercase tracking-wider">
+                    BASMALAH WASH
+                  </div>
+                  <div className="text-[10px] text-slate-500">
+                    Sistem Laundry Syariah & Modern
+                  </div>
+                  <div className="text-[9px] text-slate-400">
+                    {formatTanggalWaktu(transaksiSuccess.transaksi.createdAt)}
+                  </div>
+                </div>
+
+                <div className="space-y-1 text-[10px] py-1 border-b border-dashed border-slate-300">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Pelanggan:</span>
+                    <strong className="text-slate-900 truncate max-w-[170px]">
+                      {transaksiSuccess.isNonMember
+                        ? transaksiSuccess.transaksi.namaPelanggan
+                        : (member?.nama || transaksiSuccess.transaksi.member?.nama || "Member")}
+                    </strong>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Kategori:</span>
+                    <strong className="text-slate-800">
+                      {transaksiSuccess.isNonMember
+                        ? "Non-Member (Kiloan)"
+                        : `Member (${member?.paket?.namaPaket || "Paket"})`}
+                    </strong>
+                  </div>
+
+                  {transaksiSuccess.transaksi.rakPenyimpanan && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Posisi Rak:</span>
+                      <strong className="text-slate-900">
+                        {transaksiSuccess.transaksi.rakPenyimpanan}
+                      </strong>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Kasir:</span>
+                    <span className="text-slate-700">
+                      {user?.nama || "Admin Basmalah Wash"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-1 py-1.5 border-b border-dashed border-slate-300">
+                  <div className="flex justify-between text-xs font-black">
+                    <span>Berat Cucian:</span>
+                    <span className="text-sky-700">
+                      {parseFloat(transaksiSuccess.transaksi.beratKg).toFixed(2)} kg
+                    </span>
+                  </div>
+
+                  {!transaksiSuccess.isNonMember ? (
+                    <>
+                      <div className="flex justify-between text-[10px] text-slate-500">
+                        <span>Sisa Kuota Awal:</span>
+                        <span>
+                          {parseFloat(transaksiSuccess.transaksi.sisaSebelum).toFixed(2)} kg
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[11px] font-bold text-emerald-700">
+                        <span>Sisa Kuota Baru:</span>
+                        <span>{transaksiSuccess.sisaKuotaBaru} kg</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between text-[10px] text-slate-500">
+                        <span>Tarif per Kg:</span>
+                        <span>
+                          {formatRupiah(transaksiSuccess.transaksi.tarifPerKg || 7000)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs font-black text-emerald-800 pt-0.5">
+                        <span>TOTAL BAYAR:</span>
+                        <span>
+                          {formatRupiah(transaksiSuccess.transaksi.totalBayar)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[10px] font-bold">
+                        <span>Status Pembayaran:</span>
+                        <span
+                          className={
+                            transaksiSuccess.transaksi.statusBayar === "LUNAS"
+                              ? "text-emerald-700"
+                              : "text-rose-600"
+                          }
+                        >
+                          {transaksiSuccess.transaksi.statusBayar === "LUNAS"
+                            ? "LUNAS"
+                            : "BELUM BAYAR"}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {transaksiSuccess.transaksi.catatan && (
+                  <div className="text-[10px] text-slate-600 py-1 border-b border-dashed border-slate-300">
+                    <span className="text-slate-400">Catatan:</span>{" "}
+                    <span>{transaksiSuccess.transaksi.catatan}</span>
+                  </div>
+                )}
+
+                <div className="text-center pt-1.5 text-[9px] text-slate-400 space-y-0.5">
+                  <div>* Simpan struk ini saat pengambilan *</div>
+                  <div>Terima kasih atas kepercayaan Anda! 🙏</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 border-t border-slate-200 flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setIsStrukModalOpen(false)}
+                className="px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Print Sekarang</span>
+              </button>
             </div>
           </div>
         </div>
