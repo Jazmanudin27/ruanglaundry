@@ -586,17 +586,19 @@ export default function Members() {
                         }}
                       >
                         {/* Input Cucian Kilat */}
-                        {row.uidKartu && (
-                          <button
-                            className="btn-action btn-action-warning"
-                            onClick={() =>
-                              navigate(`/scan?uid=${row.uidKartu}`)
-                            }
-                            title="Input Cucian Kilat (Timbang Berat)"
-                          >
-                            <Scale size={11} />
-                          </button>
-                        )}
+                        <button
+                          className="btn-action btn-action-warning"
+                          onClick={() =>
+                            navigate(
+                              row.uidKartu
+                                ? `/scan?uid=${row.uidKartu}`
+                                : `/scan?memberId=${row.id}`
+                            )
+                          }
+                          title="Input Cucian Kilat (Timbang Berat)"
+                        >
+                          <Scale size={11} />
+                        </button>
 
                         {/* Lihat Detail Member */}
                         <button

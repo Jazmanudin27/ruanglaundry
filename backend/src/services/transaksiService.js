@@ -337,3 +337,13 @@ export const getAllTransaksi = async ({
     },
   };
 };
+
+export const getTransaksiByMember = async (memberId) => {
+  return await prisma.transaksi.findMany({
+    where: { memberId },
+    include: {
+      admin: { select: { nama: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};

@@ -51,11 +51,35 @@ const ScanMember = () => {
 
   useEffect(() => {
     const uidFromUrl = searchParams.get('uid');
+    const memberIdFromUrl = searchParams.get('memberId');
     if (uidFromUrl) {
       setModePelanggan('MEMBER');
       handleScan(uidFromUrl);
+    } else if (memberIdFromUrl) {
+      setModePelanggan('MEMBER');
+      handleLoadMemberById(memberIdFromUrl);
     }
   }, [searchParams]);
+
+  const handleLoadMemberById = async (id) => {
+    setMember(null);
+    setErrorMsg('');
+    setTransaksiSuccess(null);
+    setBeratKg('');
+    setLoading(true);
+
+    try {
+      const res = await memberApi.getById(id);
+      if (res.success && res.data) {
+        setMember(res.data);
+        setScannedUid(res.data.uidKartu || 'MANUAL');
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Member tidak ditemukan');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Scan RFID Member
   const handleScan = async (uid) => {
@@ -85,8 +109,14 @@ const ScanMember = () => {
       const res = await memberApi.getAll({ search: query, limit: 1 });
       if (res.success && res.data.members.length > 0) {
         const found = res.data.members[0];
-        setMember(found);
-        setScannedUid(found.uidKartu || 'MANUAL');
+        const fullRes = await memberApi.getById(found.id);
+        if (fullRes.success && fullRes.data) {
+          setMember(fullRes.data);
+          setScannedUid(fullRes.data.uidKartu || 'MANUAL');
+        } else {
+          setMember(found);
+          setScannedUid(found.uidKartu || 'MANUAL');
+        }
       } else {
         setErrorMsg(`Tidak ditemukan member dengan kata kunci "${query}"`);
       }

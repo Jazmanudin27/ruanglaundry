@@ -167,15 +167,17 @@ const MemberDetail = () => {
 
         {/* Quick Action Buttons */}
         <div className="flex items-center gap-1.5">
-          {member.uidKartu && (
-            <Link
-              to={`/scan?uid=${member.uidKartu}`}
-              className="px-3 py-1.5 bg-white text-sky-700 hover:bg-sky-50 rounded-md text-xs font-bold shadow-sm flex items-center gap-1.5 transition"
-            >
-              <Scale className="w-3.5 h-3.5" />
-              Catat Laundry
-            </Link>
-          )}
+          <Link
+            to={
+              member.uidKartu
+                ? `/scan?uid=${member.uidKartu}`
+                : `/scan?memberId=${member.id}`
+            }
+            className="px-3 py-1.5 bg-white text-sky-700 hover:bg-sky-50 rounded-md text-xs font-bold shadow-sm flex items-center gap-1.5 transition"
+          >
+            <Scale className="w-3.5 h-3.5" />
+            Catat Laundry
+          </Link>
 
           <button
             onClick={() => setIsModalGantiOpen(true)}

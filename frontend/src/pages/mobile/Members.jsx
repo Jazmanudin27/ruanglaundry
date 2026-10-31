@@ -316,7 +316,7 @@ const Members = () => {
                       type="button"
                       onClick={() =>
                         navigate(
-                          m.uidKartu ? `/scan?uid=${m.uidKartu}` : `/scan`,
+                          m.uidKartu ? `/scan?uid=${m.uidKartu}` : `/scan?memberId=${m.id}`,
                         )
                       }
                       className="px-2.5 py-1.5 bg-sky-600 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1"

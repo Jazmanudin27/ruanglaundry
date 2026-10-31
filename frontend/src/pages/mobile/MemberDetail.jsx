@@ -187,7 +187,7 @@ const MemberDetail = () => {
       {/* Quick Actions */}
       <div>
         <Link
-          to={member.uidKartu ? `/scan?uid=${member.uidKartu}` : '/scan'}
+          to={member.uidKartu ? `/scan?uid=${member.uidKartu}` : `/scan?memberId=${member.id}`}
           className="w-full py-2.5 px-3 bg-sky-600 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-sm"
         >
           <Scale className="w-4 h-4" />
