@@ -1,7 +1,13 @@
 import { z } from 'zod';
 
 export const createTransaksiSchema = z.object({
-  memberId: z.string({ required_error: 'ID Member wajib diisi' }).uuid('ID Member tidak valid'),
+  memberId: z.string().uuid('ID Member tidak valid').optional().nullable(),
+  jenisPelanggan: z.enum(['MEMBER', 'NON_MEMBER']).optional().default('MEMBER'),
+  namaPelanggan: z.string().optional().nullable(),
+  noHpPelanggan: z.string().optional().nullable(),
+  tarifPerKg: z.coerce.number().optional().default(7000),
+  totalBayar: z.coerce.number().optional().default(0),
+  statusBayar: z.enum(['LUNAS', 'BELUM_LUNAS']).optional().default('LUNAS'),
   beratKg: z.coerce.number({ required_error: 'Berat cucian wajib diisi' }).positive('Berat cucian harus lebih dari 0 kg'),
   catatan: z.string().optional().nullable(),
   rakPenyimpanan: z.string().optional().nullable(),

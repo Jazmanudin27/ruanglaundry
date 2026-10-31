@@ -83,11 +83,17 @@ model Member {
 
 model Transaksi {
   id             String      @id @default(uuid())
-  memberId       String
-  member         Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId       String?
+  member         Member?     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  namaPelanggan  String?
+  noHpPelanggan  String?
+  jenisPelanggan String      @default("MEMBER") // MEMBER, NON_MEMBER
+  tarifPerKg     Int?        @default(7000)
+  totalBayar     Int?        @default(0)
+  statusBayar    String?     @default("LUNAS") // LUNAS, BELUM_LUNAS
   beratKg        Float
-  sisaSebelum    Float
-  sisaSesudah    Float
+  sisaSebelum    Float?      @default(0)
+  sisaSesudah    Float?      @default(0)
   statusCucian   String      @default("ANTRIAN") // ANTRIAN, PROSES, SIAP_AMBIL, SELESAI
   rakPenyimpanan String?
   tglSelesaiCuci DateTime?

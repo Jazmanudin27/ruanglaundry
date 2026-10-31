@@ -5,13 +5,30 @@ import { createTransaksiSchema, updateStatusCucianSchema } from '../validators/t
 export const createTransaksi = async (req, res, next) => {
   try {
     const validated = createTransaksiSchema.parse(req.body);
-    const result = await transaksiService.createTransaksi({
-      memberId: validated.memberId,
-      beratKg: validated.beratKg,
-      catatan: validated.catatan,
-      rakPenyimpanan: validated.rakPenyimpanan,
-      adminId: req.user.id,
-    });
+
+    let result;
+    if (validated.jenisPelanggan === 'NON_MEMBER' || !validated.memberId) {
+      result = await transaksiService.createTransaksiNonMember({
+        namaPelanggan: validated.namaPelanggan,
+        noHpPelanggan: validated.noHpPelanggan,
+        beratKg: validated.beratKg,
+        tarifPerKg: validated.tarifPerKg,
+        statusBayar: validated.statusBayar,
+        catatan: validated.catatan,
+        rakPenyimpanan: validated.rakPenyimpanan,
+        adminId: req.user.id,
+        perusahaanId: req.user.perusahaanId,
+      });
+    } else {
+      result = await transaksiService.createTransaksi({
+        memberId: validated.memberId,
+        beratKg: validated.beratKg,
+        catatan: validated.catatan,
+        rakPenyimpanan: validated.rakPenyimpanan,
+        adminId: req.user.id,
+      });
+    }
+
     return successResponse(res, 201, 'Transaksi laundry berhasil dicatat', result);
   } catch (error) {
     if (
@@ -19,7 +36,8 @@ export const createTransaksi = async (req, res, next) => {
       error.message.includes('Sisa kuota') ||
       error.message.includes('Status member') ||
       error.message.includes('Berat cucian') ||
-      error.message.includes('Transaksi ditolak')
+      error.message.includes('Transaksi ditolak') ||
+      error.message.includes('non-member wajib')
     ) {
       return errorResponse(res, 400, error.message);
     }

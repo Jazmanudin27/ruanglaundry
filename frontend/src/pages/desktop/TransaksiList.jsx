@@ -598,19 +598,26 @@ const TransaksiList = () => {
                   </td>
 
                   <td>
-                    <strong
-                      style={{
-                        color: "#0f172a",
-                        fontSize: "0.76rem",
-                        cursor: "pointer",
-                      }}
-                      className="hover:text-sky-600"
-                      onClick={() => handleOpenDetailModal(t)}
-                    >
-                      {t.member?.nama || "-"}
-                    </strong>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <strong
+                        style={{
+                          color: "#0f172a",
+                          fontSize: "0.76rem",
+                          cursor: "pointer",
+                        }}
+                        className="hover:text-sky-600"
+                        onClick={() => handleOpenDetailModal(t)}
+                      >
+                        {t.member?.nama || t.namaPelanggan || "-"}
+                      </strong>
+                      {t.jenisPelanggan === "NON_MEMBER" ? (
+                        <span className="badge badge-warning">Non-Member</span>
+                      ) : (
+                        <span className="badge badge-info">Member</span>
+                      )}
+                    </div>
                     <div style={{ fontSize: "0.64rem", color: "#64748b" }}>
-                      {t.member?.noHp}
+                      {t.member?.noHp || t.noHpPelanggan || "-"}
                     </div>
                   </td>
 
@@ -665,11 +672,15 @@ const TransaksiList = () => {
                     className="td-center"
                     style={{ color: "#64748b", fontSize: "0.7rem" }}
                   >
-                    {parseFloat(t.sisaSebelum).toFixed(2)} kg
+                    {t.jenisPelanggan === "NON_MEMBER"
+                      ? `@ Rp ${(t.tarifPerKg || 7000).toLocaleString('id-ID')}`
+                      : `${parseFloat(t.sisaSebelum || 0).toFixed(2)} kg`}
                   </td>
                   <td className="td-center">
                     <strong style={{ color: "#059669", fontSize: "0.74rem" }}>
-                      {parseFloat(t.sisaSesudah).toFixed(2)} kg
+                      {t.jenisPelanggan === "NON_MEMBER"
+                        ? `Rp ${(t.totalBayar || 0).toLocaleString('id-ID')}`
+                        : `${parseFloat(t.sisaSesudah || 0).toFixed(2)} kg`}
                     </strong>
                   </td>
                   <td style={{ fontSize: "0.68rem", color: "#475569" }}>
@@ -853,24 +864,29 @@ const TransaksiList = () => {
                     style={{ display: "flex", justifyContent: "space-between" }}
                   >
                     <span>Pelanggan:</span>
-                    <strong>{selectedTransaksi.member?.nama}</strong>
+                    <strong>
+                      {selectedTransaksi.member?.nama || selectedTransaksi.namaPelanggan || "Pelanggan"}
+                      {selectedTransaksi.jenisPelanggan === "NON_MEMBER" ? " (Non-Member)" : ""}
+                    </strong>
                   </div>
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <span>UID Kartu:</span>
-                    <span>{selectedTransaksi.member?.uidKartu || "-"}</span>
-                  </div>
+                  {selectedTransaksi.jenisPelanggan !== "NON_MEMBER" && (
+                    <div
+                      style={{ display: "flex", justifyContent: "space-between" }}
+                    >
+                      <span>UID Kartu:</span>
+                      <span>{selectedTransaksi.member?.uidKartu || "-"}</span>
+                    </div>
+                  )}
                   <div
                     style={{ display: "flex", justifyContent: "space-between" }}
                   >
                     <span>No. HP:</span>
-                    <span>{selectedTransaksi.member?.noHp}</span>
+                    <span>{selectedTransaksi.member?.noHp || selectedTransaksi.noHpPelanggan || "-"}</span>
                   </div>
                   <div
                     style={{ display: "flex", justifyContent: "space-between" }}
                   >
-                    <span>Status:</span>
+                    <span>Status Cucian:</span>
                     <strong>{modalStatus}</strong>
                   </div>
                   {modalRak && (
@@ -913,26 +929,57 @@ const TransaksiList = () => {
                       {parseFloat(selectedTransaksi.beratKg).toFixed(2)} kg
                     </span>
                   </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginTop: "3px",
-                    }}
-                  >
-                    <span>Sisa Sebelum:</span>
-                    <span>
-                      {parseFloat(selectedTransaksi.sisaSebelum).toFixed(2)} kg
-                    </span>
-                  </div>
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <span>Sisa Sesudah:</span>
-                    <strong style={{ color: "#059669" }}>
-                      {parseFloat(selectedTransaksi.sisaSesudah).toFixed(2)} kg
-                    </strong>
-                  </div>
+
+                  {selectedTransaksi.jenisPelanggan === "NON_MEMBER" ? (
+                    <>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginTop: "3px",
+                        }}
+                      >
+                        <span>Tarif per Kg:</span>
+                        <span>Rp {(selectedTransaksi.tarifPerKg || 7000).toLocaleString('id-ID')}</span>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginTop: "3px",
+                          fontWeight: 800,
+                        }}
+                      >
+                        <span>Total Bayar:</span>
+                        <strong style={{ color: "#059669" }}>
+                          Rp {(selectedTransaksi.totalBayar || 0).toLocaleString('id-ID')} ({selectedTransaksi.statusBayar || "LUNAS"})
+                        </strong>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginTop: "3px",
+                        }}
+                      >
+                        <span>Sisa Sebelum:</span>
+                        <span>
+                          {parseFloat(selectedTransaksi.sisaSebelum || 0).toFixed(2)} kg
+                        </span>
+                      </div>
+                      <div
+                        style={{ display: "flex", justifyContent: "space-between" }}
+                      >
+                        <span>Sisa Sesudah:</span>
+                        <strong style={{ color: "#059669" }}>
+                          {parseFloat(selectedTransaksi.sisaSesudah || 0).toFixed(2)} kg
+                        </strong>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {selectedTransaksi.catatan && (

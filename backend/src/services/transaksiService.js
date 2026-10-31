@@ -104,6 +104,60 @@ export const createTransaksi = async ({ memberId, beratKg, catatan, rakPenyimpan
   });
 };
 
+export const createTransaksiNonMember = async ({
+  namaPelanggan,
+  noHpPelanggan,
+  beratKg,
+  tarifPerKg = 7000,
+  statusBayar = 'LUNAS',
+  catatan,
+  rakPenyimpanan,
+  adminId,
+  perusahaanId,
+}) => {
+  const berat = Number(beratKg);
+  if (isNaN(berat) || berat <= 0) {
+    throw new Error('Berat cucian harus lebih dari 0 kg');
+  }
+
+  if (!namaPelanggan || !namaPelanggan.trim()) {
+    throw new Error('Nama pelanggan non-member wajib diisi');
+  }
+
+  const tarif = Number(tarifPerKg) || 7000;
+  const beratVal = +(berat.toFixed(2));
+  const totalBayar = Math.round(beratVal * tarif);
+
+  const transaksiRecord = await prisma.transaksi.create({
+    data: {
+      memberId: null,
+      namaPelanggan: namaPelanggan.trim(),
+      noHpPelanggan: noHpPelanggan ? noHpPelanggan.trim() : null,
+      jenisPelanggan: 'NON_MEMBER',
+      tarifPerKg: tarif,
+      totalBayar,
+      statusBayar: statusBayar || 'LUNAS',
+      beratKg: beratVal,
+      sisaSebelum: 0,
+      sisaSesudah: 0,
+      statusCucian: 'ANTRIAN',
+      rakPenyimpanan: rakPenyimpanan || null,
+      catatan: catatan || null,
+      adminId,
+      perusahaanId: perusahaanId || null,
+    },
+    include: {
+      admin: { select: { nama: true } },
+      perusahaan: { select: { namaPerusahaan: true } },
+    },
+  });
+
+  return {
+    transaksi: transaksiRecord,
+    isNonMember: true,
+  };
+};
+
 export const updateStatusCucian = async (id, { statusCucian, rakPenyimpanan, catatan }) => {
   const existing = await prisma.transaksi.findUnique({
     where: { id },
@@ -221,6 +275,8 @@ export const getAllTransaksi = async ({
     where.OR = [
       { catatan: { contains: clean } },
       { rakPenyimpanan: { contains: clean } },
+      { namaPelanggan: { contains: clean } },
+      { noHpPelanggan: { contains: clean } },
       { member: { nama: { contains: clean } } },
       { member: { noHp: { contains: clean } } },
       { member: { uidKartu: { contains: clean.toUpperCase() } } },

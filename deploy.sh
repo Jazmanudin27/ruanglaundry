@@ -17,3 +17,4 @@ npm install --omit=dev
 npm run build
 
 echo "✅ Deploy selesai! Aplikasi Basmalah Wash siap dipakai."
+

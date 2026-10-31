@@ -323,10 +323,19 @@ const TransaksiList = () => {
                 {/* Baris Atas: Nama & Status */}
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-xs font-extrabold text-slate-900">
-                        {t.member?.nama || 'Member'}
+                        {t.member?.nama || t.namaPelanggan || 'Pelanggan'}
                       </span>
+                      {t.jenisPelanggan === 'NON_MEMBER' ? (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                          Non-Member
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-sky-100 text-sky-800 border border-sky-300">
+                          Member
+                        </span>
+                      )}
                     </div>
                     <div className="text-[10px] text-slate-400 mt-0.5">
                       {formatTanggalWaktu(t.createdAt)}
@@ -335,7 +344,7 @@ const TransaksiList = () => {
                   {renderStatusBadge(t.statusCucian)}
                 </div>
 
-                {/* Baris Tengah: Info Berat, Sisa Kuota & Rak */}
+                {/* Baris Tengah: Info Berat, Sisa Kuota / Biaya & Rak */}
                 <div className="grid grid-cols-3 gap-1.5 bg-slate-50 rounded-xl p-2 text-center border border-slate-100">
                   <div>
                     <span className="text-[9px] text-slate-400 uppercase font-bold block">
@@ -347,10 +356,12 @@ const TransaksiList = () => {
                   </div>
                   <div>
                     <span className="text-[9px] text-slate-400 uppercase font-bold block">
-                      Sisa Kuota
+                      {t.jenisPelanggan === 'NON_MEMBER' ? 'Biaya Cucian' : 'Sisa Kuota'}
                     </span>
                     <strong className="text-xs font-black text-emerald-600">
-                      {parseFloat(t.sisaSesudah).toFixed(2)} kg
+                      {t.jenisPelanggan === 'NON_MEMBER'
+                        ? `Rp ${(t.totalBayar || 0).toLocaleString('id-ID')}`
+                        : `${parseFloat(t.sisaSesudah || 0).toFixed(2)} kg`}
                     </strong>
                   </div>
                   <div>
