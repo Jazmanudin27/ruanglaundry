@@ -46,9 +46,8 @@ const ScanMember = () => {
   const [tarifPerKg, setTarifPerKg] = useState(7000);
   const [statusBayar, setStatusBayar] = useState('LUNAS');
 
-  // --- RESULT TRANSAKSI & MODAL STRUK ---
+  // --- RESULT TRANSAKSI ---
   const [transaksiSuccess, setTransaksiSuccess] = useState(null);
-  const [isStrukModalOpen, setIsStrukModalOpen] = useState(false);
 
   useEffect(() => {
     const uidFromUrl = searchParams.get('uid');
@@ -135,6 +134,10 @@ const ScanMember = () => {
         setBeratKg('');
         setCatatan('');
         setRakPenyimpanan('');
+        // Langsung cetak otomatis faktur thermal tanpa modal
+        setTimeout(() => {
+          window.print();
+        }, 300);
       }
     } catch (err) {
       setErrorMsg(err.message || 'Gagal menyimpan transaksi member');
@@ -179,6 +182,10 @@ const ScanMember = () => {
         setBeratKg('');
         setCatatan('');
         setRakPenyimpanan('');
+        // Langsung cetak otomatis faktur thermal tanpa modal
+        setTimeout(() => {
+          window.print();
+        }, 300);
       }
     } catch (err) {
       setErrorMsg(err.message || 'Gagal menyimpan transaksi non-member');
@@ -275,21 +282,36 @@ const ScanMember = () => {
         </div>
       )}
 
-      {/* 3. NOTA POPUP TRANSAKSI BERHASIL + TOMBOL CETAK FAKTUR */}
+      {/* 3. NOTA TRANSAKSI BERHASIL + TOMBOL CETAK FAKTUR */}
       {transaksiSuccess && (
         <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl shadow-md text-emerald-950 space-y-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <div>
-              <h4 className="text-sm font-extrabold text-emerald-800">
-                Transaksi Berhasil Dicatat!
-              </h4>
-              <p className="text-[11px] text-emerald-700">
-                {transaksiSuccess.isNonMember
-                  ? 'Cucian non-member telah masuk antrian cuci.'
-                  : 'Kuota member telah otomatis dikurangi.'}
-              </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div>
+                <h4 className="text-sm font-extrabold text-emerald-800">
+                  Transaksi Berhasil Dicatat!
+                </h4>
+                <p className="text-[11px] text-emerald-700">
+                  {transaksiSuccess.isNonMember
+                    ? 'Cucian non-member telah masuk antrian cuci.'
+                    : 'Kuota member telah otomatis dikurangi.'}
+                </p>
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setTransaksiSuccess(null);
+                setMember(null);
+                setScannedUid('');
+              }}
+              className="text-slate-400 hover:text-slate-700 p-1"
+              title="Tutup & Transaksi Baru"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
@@ -314,15 +336,28 @@ const ScanMember = () => {
             </div>
           </div>
 
-          {/* Tombol Cetak Faktur Struk */}
-          <button
-            type="button"
-            onClick={() => setIsStrukModalOpen(true)}
-            className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition"
-          >
-            <Printer className="w-4 h-4 text-sky-400" />
-            <span>Cetak Faktur / Struk</span>
-          </button>
+          {/* Tombol Cetak Ulang Faktur & Transaksi Baru */}
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition"
+            >
+              <Printer className="w-4 h-4 text-sky-400" />
+              <span>Cetak Ulang Faktur</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTransaksiSuccess(null);
+                setMember(null);
+                setScannedUid('');
+              }}
+              className="px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-xs transition"
+            >
+              Selesai
+            </button>
+          </div>
         </div>
       )}
 
@@ -697,165 +732,125 @@ const ScanMember = () => {
       )}
 
       {/* ========================================================
-          4. MODAL CETAK STRUK / FAKTUR THERMAL (58mm / 80mm)
+          AREA CETAK STRUK / FAKTUR THERMAL (58mm / 80mm)
+          Disembunyikan di layar, otomatis dikirim ke printer saat window.print()
           ======================================================== */}
-      {isStrukModalOpen && transaksiSuccess && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/70 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[92vh]">
-            {/* Header Modal */}
-            <div className="bg-[#0f172a] px-4 py-3 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Printer className="w-4 h-4 text-sky-400" />
-                <span className="text-xs font-black tracking-wide">
-                  Faktur / Struk Thermal
+      {transaksiSuccess && (
+        <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none print:opacity-100 print:pointer-events-auto print:static print:visible">
+          <div
+            id="printable-thermal-receipt"
+            className="bg-white p-3.5 border border-dashed border-slate-300 rounded-xl font-mono text-[11px] text-slate-900 leading-tight space-y-2 select-text"
+          >
+            {/* Toko Header */}
+            <div className="text-center pb-2 border-b border-dashed border-slate-300 space-y-0.5">
+              <div className="font-black text-sm text-slate-950 uppercase tracking-wider">
+                BASMALAH WASH
+              </div>
+              <div className="text-[10px] text-slate-500">
+                Sistem Laundry Syariah & Modern
+              </div>
+              <div className="text-[9px] text-slate-400">
+                {formatTanggalWaktu(transaksiSuccess.transaksi.createdAt)}
+              </div>
+            </div>
+
+            {/* Metadata Pelanggan & Kasir */}
+            <div className="space-y-1 text-[10px] py-1 border-b border-dashed border-slate-300">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Pelanggan:</span>
+                <strong className="text-slate-900 truncate max-w-[170px]">
+                  {transaksiSuccess.isNonMember
+                    ? transaksiSuccess.transaksi.namaPelanggan
+                    : (member?.nama || transaksiSuccess.transaksi.member?.nama || 'Member')}
+                </strong>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-slate-500">Kategori:</span>
+                <strong className="text-slate-800">
+                  {transaksiSuccess.isNonMember
+                    ? 'Non-Member (Kiloan)'
+                    : `Member (${member?.paket?.namaPaket || 'Paket'})`}
+                </strong>
+              </div>
+
+              {transaksiSuccess.transaksi.rakPenyimpanan && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Posisi Rak:</span>
+                  <strong className="text-slate-900">
+                    {transaksiSuccess.transaksi.rakPenyimpanan}
+                  </strong>
+                </div>
+              )}
+
+              <div className="flex justify-between">
+                <span className="text-slate-500">Kasir:</span>
+                <span className="text-slate-700">
+                  {user?.nama || 'Admin Basmalah Wash'}
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsStrukModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
 
-            {/* Area Printable Kertas Struk */}
-            <div className="p-4 overflow-y-auto">
-              <div
-                id="printable-thermal-receipt"
-                className="bg-white p-3.5 border border-dashed border-slate-300 rounded-xl font-mono text-[11px] text-slate-900 leading-tight space-y-2 select-text"
-              >
-                {/* Toko Header */}
-                <div className="text-center pb-2 border-b border-dashed border-slate-300 space-y-0.5">
-                  <div className="font-black text-sm text-slate-950 uppercase tracking-wider">
-                    BASMALAH WASH
-                  </div>
-                  <div className="text-[10px] text-slate-500">
-                    Sistem Laundry Syariah & Modern
-                  </div>
-                  <div className="text-[9px] text-slate-400">
-                    {formatTanggalWaktu(transaksiSuccess.transaksi.createdAt)}
-                  </div>
-                </div>
-
-                {/* Metadata Pelanggan & Kasir */}
-                <div className="space-y-1 text-[10px] py-1 border-b border-dashed border-slate-300">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Pelanggan:</span>
-                    <strong className="text-slate-900 truncate max-w-[170px]">
-                      {transaksiSuccess.isNonMember
-                        ? transaksiSuccess.transaksi.namaPelanggan
-                        : (member?.nama || transaksiSuccess.transaksi.member?.nama || 'Member')}
-                    </strong>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Kategori:</span>
-                    <strong className="text-slate-800">
-                      {transaksiSuccess.isNonMember
-                        ? 'Non-Member (Kiloan)'
-                        : `Member (${member?.paket?.namaPaket || 'Paket'})`}
-                    </strong>
-                  </div>
-
-                  {transaksiSuccess.transaksi.rakPenyimpanan && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Posisi Rak:</span>
-                      <strong className="text-slate-900">
-                        {transaksiSuccess.transaksi.rakPenyimpanan}
-                      </strong>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Kasir:</span>
-                    <span className="text-slate-700">
-                      {user?.nama || 'Admin Basmalah Wash'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Rincian Berat & Kuota / Biaya */}
-                <div className="space-y-1 py-1.5 border-b border-dashed border-slate-300">
-                  <div className="flex justify-between text-xs font-black">
-                    <span>Berat Cucian:</span>
-                    <span className="text-sky-700">
-                      {parseFloat(transaksiSuccess.transaksi.beratKg).toFixed(2)} kg
-                    </span>
-                  </div>
-
-                  {/* Jika Member */}
-                  {!transaksiSuccess.isNonMember && (
-                    <>
-                      <div className="flex justify-between text-[10px] text-slate-500">
-                        <span>Sisa Kuota Awal:</span>
-                        <span>
-                          {parseFloat(transaksiSuccess.transaksi.sisaSebelum).toFixed(2)} kg
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-[11px] font-bold text-emerald-700">
-                        <span>Sisa Kuota Baru:</span>
-                        <span>
-                          {transaksiSuccess.sisaKuotaBaru} kg
-                        </span>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Jika Non Member */}
-                  {transaksiSuccess.isNonMember && (
-                    <>
-                      <div className="flex justify-between text-[10px] text-slate-500">
-                        <span>Tarif per Kg:</span>
-                        <span>{formatRupiah(transaksiSuccess.transaksi.tarifPerKg || 7000)}</span>
-                      </div>
-                      <div className="flex justify-between text-xs font-black text-emerald-800 pt-0.5">
-                        <span>TOTAL BAYAR:</span>
-                        <span>{formatRupiah(transaksiSuccess.transaksi.totalBayar)}</span>
-                      </div>
-                      <div className="flex justify-between text-[10px] font-bold">
-                        <span>Status Pembayaran:</span>
-                        <span className={transaksiSuccess.transaksi.statusBayar === 'LUNAS' ? 'text-emerald-700' : 'text-rose-600'}>
-                          {transaksiSuccess.transaksi.statusBayar === 'LUNAS' ? 'LUNAS' : 'BELUM BAYAR'}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Catatan jika ada */}
-                {transaksiSuccess.transaksi.catatan && (
-                  <div className="text-[10px] text-slate-600 py-1 border-b border-dashed border-slate-300">
-                    <span className="text-slate-400">Catatan:</span>{' '}
-                    <span>{transaksiSuccess.transaksi.catatan}</span>
-                  </div>
-                )}
-
-                {/* Footer Struk */}
-                <div className="text-center pt-1.5 text-[9px] text-slate-400 space-y-0.5">
-                  <div>* Simpan struk ini saat pengambilan *</div>
-                  <div>Terima kasih atas kepercayaan Anda! 🙏</div>
-                </div>
+            {/* Rincian Berat & Kuota / Biaya */}
+            <div className="space-y-1 py-1.5 border-b border-dashed border-slate-300">
+              <div className="flex justify-between text-xs font-black">
+                <span>Berat Cucian:</span>
+                <span className="text-sky-700">
+                  {parseFloat(transaksiSuccess.transaksi.beratKg).toFixed(2)} kg
+                </span>
               </div>
+
+              {/* Jika Member */}
+              {!transaksiSuccess.isNonMember && (
+                <>
+                  <div className="flex justify-between text-[10px] text-slate-500">
+                    <span>Sisa Kuota Awal:</span>
+                    <span>
+                      {parseFloat(transaksiSuccess.transaksi.sisaSebelum).toFixed(2)} kg
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-bold text-emerald-700">
+                    <span>Sisa Kuota Baru:</span>
+                    <span>
+                      {transaksiSuccess.sisaKuotaBaru} kg
+                    </span>
+                  </div>
+                </>
+              )}
+
+              {/* Jika Non Member */}
+              {transaksiSuccess.isNonMember && (
+                <>
+                  <div className="flex justify-between text-[10px] text-slate-500">
+                    <span>Tarif per Kg:</span>
+                    <span>{formatRupiah(transaksiSuccess.transaksi.tarifPerKg || 7000)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs font-black text-emerald-800 pt-0.5">
+                    <span>TOTAL BAYAR:</span>
+                    <span>{formatRupiah(transaksiSuccess.transaksi.totalBayar)}</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] font-bold">
+                    <span>Status Pembayaran:</span>
+                    <span className={transaksiSuccess.transaksi.statusBayar === 'LUNAS' ? 'text-emerald-700' : 'text-rose-600'}>
+                      {transaksiSuccess.transaksi.statusBayar === 'LUNAS' ? 'LUNAS' : 'BELUM BAYAR'}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* Footer Modal Action */}
-            <div className="p-3 bg-slate-50 border-t border-slate-200 flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={() => setIsStrukModalOpen(false)}
-                className="px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
-              >
-                Tutup
-              </button>
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Print Sekarang</span>
-              </button>
+            {/* Catatan jika ada */}
+            {transaksiSuccess.transaksi.catatan && (
+              <div className="text-[10px] text-slate-600 py-1 border-b border-dashed border-slate-300">
+                <span className="text-slate-400">Catatan:</span>{' '}
+                <span>{transaksiSuccess.transaksi.catatan}</span>
+              </div>
+            )}
+
+            {/* Footer Struk */}
+            <div className="text-center pt-1.5 text-[9px] text-slate-400 space-y-0.5">
+              <div>* Simpan struk ini saat pengambilan *</div>
+              <div>Terima kasih atas kepercayaan Anda! 🙏</div>
             </div>
           </div>
         </div>
