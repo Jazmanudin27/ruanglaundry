@@ -18,14 +18,30 @@ const app = express();
 // Keamanan dengan Helmet
 app.use(helmet());
 
-// Pengaturan CORS
+// Pengaturan CORS Fleksibel (Mendukung Multi-Domain Comma-Separated & Reverse Proxy)
+const allowedOrigins = ENV.CORS_ORIGIN
+  ? ENV.CORS_ORIGIN.split(',').map((o) => o.trim())
+  : [];
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || origin === ENV.CORS_ORIGIN || origin.startsWith('http://localhost:')) {
+      // Izinkan jika request tanpa origin (mobile app, curl, server proxy lokal)
+      if (!origin) return callback(null, true);
+
+      // Izinkan jika origin ada dalam daftar .env, localhost, atau domain ruangtech
+      const isAllowed =
+        allowedOrigins.includes('*') ||
+        allowedOrigins.includes(origin) ||
+        origin.startsWith('http://localhost:') ||
+        origin.startsWith('https://localhost:') ||
+        origin.endsWith('.ruangtech.com') ||
+        origin === 'https://laundry.ruangtech.com';
+
+      if (isAllowed) {
         callback(null, true);
       } else {
-        callback(new Error('Akses diblokir oleh kebijakan CORS'));
+        callback(new Error(`Akses diblokir oleh kebijakan CORS untuk origin: ${origin}`));
       }
     },
     credentials: true,
