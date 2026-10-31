@@ -218,9 +218,14 @@ const MemberForm = () => {
 
             {selectedPaket && (
               <div className="mt-2 p-2.5 bg-sky-50 border border-sky-200 rounded-xl text-xs text-sky-900 flex items-center justify-between">
-                <span>
-                  Kuota: <strong>{selectedPaket.kuotaKg} kg</strong> ({selectedPaket.durasiHari} hari)
-                </span>
+                <div>
+                  <span>
+                    Kuota: <strong>{selectedPaket.kuotaKg} kg</strong>
+                  </span>
+                  <p className="text-[10px] text-sky-700 mt-0.5">
+                    *Masa aktif 30 hari otomatis tercatat saat cuci pertama
+                  </p>
+                </div>
                 <strong className="text-sky-800 font-black">
                   {formatRupiah(selectedPaket.harga)}
                 </strong>

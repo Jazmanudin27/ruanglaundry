@@ -68,10 +68,10 @@ const Navbar = () => {
               </div>
               <div className="flex flex-col">
                 <span className="font-extrabold text-sm tracking-wide text-white leading-tight">
-                  RUANG LAUNDRY
+                  BASMALAH WASH
                 </span>
                 <span className="text-[9px] text-slate-400 font-semibold tracking-wider uppercase leading-none">
-                  Sistem Member NFC
+                  Sistem Member RFID
                 </span>
               </div>
             </NavLink>

@@ -142,7 +142,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Kolom 3: Hampir Habis */}
+          {/* Kolom 3: Reminder 3-5 Hari / Hampir Habis */}
           <div className="py-2.5 px-1 bg-amber-50/90 rounded-2xl border border-amber-300 flex flex-col items-center justify-center">
             <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mb-1.5 shadow-sm">
               <AlertCircle className="w-4 h-4" />
@@ -151,7 +151,7 @@ const Dashboard = () => {
               {loading ? '-' : data?.statistik?.totalHampirHabis || 0}
             </div>
             <div className="text-[10px] font-bold text-amber-800 mt-0.5">
-              Perlu Isi
+              Reminder ≤5h
             </div>
           </div>
 
@@ -207,14 +207,14 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* 3. CARD PERINGATAN KUOTA HAMPIR HABIS */}
+      {/* 3. CARD REMINDER MASA AKTIF MEMBER */}
       {data?.memberHampirHabis && data.memberHampirHabis.length > 0 && (
         <div className="bg-white rounded-[24px] p-4 shadow-md border border-slate-300/90">
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
             <div className="flex items-center gap-1.5">
               <AlertCircle className="w-4 h-4 text-amber-500" />
               <span className="text-xs font-extrabold text-slate-900">
-                Perlu Perpanjangan Kuota
+                Reminder Masa Aktif Member
               </span>
             </div>
             <Link
@@ -226,26 +226,51 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-2">
-            {data.memberHampirHabis.slice(0, 4).map((m) => (
+            {data.memberHampirHabis.slice(0, 5).map((m) => (
               <div
                 key={m.id}
-                className="p-2.5 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-between gap-2"
+                className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2"
               >
                 <div className="min-w-0">
-                  <div className="text-xs font-extrabold text-slate-900 truncate">
-                    {m.nama}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-extrabold text-slate-900 truncate">
+                      {m.nama}
+                    </span>
+                    {m.statusBadge === 'MERAH' ? (
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-300">
+                        🔴 ≤1 Hari
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 border border-amber-300">
+                        🟡 {m.daysLeft} Hari
+                      </span>
+                    )}
                   </div>
-                  <div className="text-[10px] text-slate-600">
-                    Sisa <strong className="text-amber-700">{m.sisaKuota} kg</strong> • s/d{' '}
-                    {formatTanggal(m.tglBerakhir)}
+                  <div className="text-[10px] text-slate-500 mt-0.5">
+                    Sisa: <strong className="text-slate-700">{m.sisaKuota} kg</strong> •{' '}
+                    {m.tglBerakhir ? `s/d ${formatTanggal(m.tglBerakhir)}` : 'Belum Mulai'}
                   </div>
                 </div>
-                <Link
-                  to={`/members/${m.id}?tab=perpanjang`}
-                  className="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-[10px] font-extrabold shrink-0 shadow-sm"
-                >
-                  Isi Kuota
-                </Link>
+                <div className="flex items-center gap-1 shrink-0">
+                  {m.noHp && (
+                    <a
+                      href={`https://wa.me/${m.noHp.replace(/^0/, '62')}?text=${encodeURIComponent(
+                        `Halo Kak *${m.nama}*,\n\nKami dari *Basmalah Wash* menginfokan paket laundry Kakak tersisa *${m.daysLeft || 0} hari* (Sisa kuota: *${m.sisaKuota} kg*). Yuk perpanjang paketnya agar cucian lancar! Terima kasih. 🙏`
+                      )}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2 py-1.5 bg-emerald-600 text-white rounded-xl text-[10px] font-extrabold shadow-xs"
+                    >
+                      WA
+                    </a>
+                  )}
+                  <Link
+                    to={`/members/${m.id}?tab=perpanjang`}
+                    className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-xl text-[10px] font-extrabold shadow-xs"
+                  >
+                    Isi
+                  </Link>
+                </div>
               </div>
             ))}
           </div>

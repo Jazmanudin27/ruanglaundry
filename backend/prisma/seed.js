@@ -21,16 +21,16 @@ async function main() {
     return d;
   };
 
-  // 1. Buat 3 Perusahaan Laundry Contoh (SaaS 200rb/bulan)
+  // 1. Buat Perusahaan Laundry Basmalah Wash
   const p1 = await prisma.perusahaan.create({
     data: {
-      namaPerusahaan: 'Ruang Laundry Express',
-      kodePerusahaan: 'RL-01',
-      namaOwner: 'Bapak H. Hendra Saputra',
+      namaPerusahaan: 'Basmalah Wash',
+      kodePerusahaan: 'BW-01',
+      namaOwner: 'Owner Basmalah Wash',
       noHpOwner: '081234567890',
-      alamat: 'Jl. Pemuda No. 45, Bandung',
+      alamat: 'Jl. Utama Basmalah Wash No. 1',
       tglMulaiLangganan: now,
-      tglBerakhirLangganan: addDays(now, 30), // Aktif 30 hari ke depan
+      tglBerakhirLangganan: addDays(now, 365), // Aktif 1 tahun
       statusLangganan: 'AKTIF',
       tarifBulanan: 200000,
     },
@@ -79,10 +79,10 @@ async function main() {
     },
   });
 
-  // Admin Outlet 1 (Ruang Laundry Express)
+  // Admin Outlet 1 (Basmalah Wash)
   const admin1 = await prisma.admin.create({
     data: {
-      nama: 'Admin Ruang Laundry',
+      nama: 'Admin Basmalah Wash',
       username: 'admin',
       passwordHash,
       role: 'ADMIN',
@@ -102,13 +102,13 @@ async function main() {
   });
   console.log('Akun Super Owner & Admin Outlet Berhasil Dibuat');
 
-  // 3. Buat Paket Laundry untuk Perusahaan 1
-  const paketHemat = await prisma.paket.create({
+  // 3. Buat 3 Paket Bulanan Resmi Basmalah Wash
+  const paketBasic = await prisma.paket.create({
     data: {
-      namaPaket: 'Paket Hemat',
-      kuotaKg: 10.0,
+      namaPaket: 'Basic',
+      kuotaKg: 15.0,
       durasiHari: 30,
-      harga: 70000,
+      harga: 100000,
       aktif: true,
       perusahaanId: p1.id,
     },
@@ -116,7 +116,7 @@ async function main() {
 
   const paketReguler = await prisma.paket.create({
     data: {
-      namaPaket: 'Paket Reguler',
+      namaPaket: 'Reguler',
       kuotaKg: 25.0,
       durasiHari: 30,
       harga: 160000,
@@ -125,78 +125,83 @@ async function main() {
     },
   });
 
-  const paketFamily = await prisma.paket.create({
+  const paketPremium = await prisma.paket.create({
     data: {
-      namaPaket: 'Paket Family',
-      kuotaKg: 50.0,
-      durasiHari: 60,
-      harga: 300000,
+      namaPaket: 'Premium',
+      kuotaKg: 30.0,
+      durasiHari: 30,
+      harga: 200000,
       aktif: true,
       perusahaanId: p1.id,
     },
   });
 
-  // 4. Buat Member untuk Perusahaan 1
+  // 4. Buat Member Contoh untuk Basmalah Wash
+  // Member 1: Baru mendaftar (belum cuci pertama, masa aktif belum berjalan)
   const m1 = await prisma.member.create({
     data: {
       nama: 'Salmah Khairani Nasution',
       noHp: '081234567890',
       uidKartu: '04A1B2C3D4E5F6',
-      paketId: paketReguler.id,
-      kuotaAwal: 25.0,
-      sisaKuota: 20.5,
-      tglMulai: addDays(now, -5),
-      tglBerakhir: addDays(now, 25),
+      paketId: paketBasic.id,
+      kuotaAwal: 15.0,
+      sisaKuota: 15.0,
+      tglMulai: null,
+      tglBerakhir: null,
       status: 'AKTIF',
       perusahaanId: p1.id,
     },
   });
 
+  // Member 2: Paket Reguler 25 kg, sudah cuci (Aktif Hijau, sisa 20 hari)
   const m2 = await prisma.member.create({
     data: {
       nama: 'Budi Santoso',
       noHp: '085712349988',
       uidKartu: 'E2806894000050',
-      paketId: paketHemat.id,
-      kuotaAwal: 10.0,
-      sisaKuota: 0.8,
-      tglMulai: addDays(now, -15),
-      tglBerakhir: addDays(now, 15),
+      paketId: paketReguler.id,
+      kuotaAwal: 25.0,
+      sisaKuota: 20.0,
+      tglMulai: addDays(now, -10),
+      tglBerakhir: addDays(now, 20),
       status: 'AKTIF',
       perusahaanId: p1.id,
     },
   });
 
+  // Member 3: Indikator KUNING (Tersisa 4 hari)
   const m3 = await prisma.member.create({
     data: {
       nama: 'Siti Rahmawati',
       noHp: '081399887766',
       uidKartu: '04556677889900',
-      paketId: paketFamily.id,
-      kuotaAwal: 50.0,
-      sisaKuota: 28.0,
-      tglMulai: addDays(now, -57),
-      tglBerakhir: addDays(now, 3),
+      paketId: paketPremium.id,
+      kuotaAwal: 30.0,
+      sisaKuota: 12.0,
+      tglMulai: addDays(now, -26),
+      tglBerakhir: addDays(now, 4), // Kuning: 3-5 hari
       status: 'AKTIF',
       perusahaanId: p1.id,
     },
   });
 
+  // Member 4: Indikator MERAH (Tersisa 1 hari)
   const m4 = await prisma.member.create({
     data: {
       nama: 'Ahmad Fauzi',
       noHp: '082188776655',
       uidKartu: 'A1B2C3D4001122',
-      paketId: paketHemat.id,
-      kuotaAwal: 10.0,
+      paketId: paketBasic.id,
+      kuotaAwal: 15.0,
       sisaKuota: 3.5,
-      tglMulai: addDays(now, -40),
-      tglBerakhir: addDays(now, -10),
+      tglMulai: addDays(now, -29),
+      tglBerakhir: addDays(now, 1), // Merah: 1 hari
       status: 'AKTIF',
       perusahaanId: p1.id,
     },
   });
 
+  // Member 5: Indikator MERAH (Expired / 0 hari)
   const m5 = await prisma.member.create({
     data: {
       nama: 'Dewi Lestari',
@@ -204,65 +209,65 @@ async function main() {
       uidKartu: null,
       paketId: paketReguler.id,
       kuotaAwal: 25.0,
-      sisaKuota: 25.0,
-      tglMulai: now,
-      tglBerakhir: addDays(now, 30),
+      sisaKuota: 0.0,
+      tglMulai: addDays(now, -35),
+      tglBerakhir: addDays(now, -5), // Merah: expired
       status: 'AKTIF',
       perusahaanId: p1.id,
     },
   });
 
-  // 5. Buat Riwayat Transaksi Cucian
+  // 5. Buat Riwayat Transaksi Cucian Contoh
   await prisma.transaksi.create({
     data: {
-      memberId: m1.id,
-      beratKg: 4.5,
+      memberId: m2.id,
+      beratKg: 5.0,
       sisaSebelum: 25.0,
-      sisaSesudah: 20.5,
-      catatan: 'Cuci kemeja & sprei kasur',
+      sisaSesudah: 20.0,
+      catatan: 'Cuci kemeja & sprei',
       adminId: admin1.id,
       perusahaanId: p1.id,
-      createdAt: addDays(now, -2),
+      createdAt: addDays(now, -10),
     },
   });
 
   // 6. Buat Riwayat Pembelian / Perpanjangan Paket (Histori Pembelian)
   await prisma.perpanjangan.create({
     data: {
-      memberId: m1.id,
+      memberId: m2.id,
       paketId: paketReguler.id,
-      tglMulai: addDays(now, -5),
-      tglBerakhir: addDays(now, 25),
+      tglMulai: addDays(now, -10),
+      tglBerakhir: addDays(now, 20),
       hargaDibayar: 160000,
       adminId: admin1.id,
       perusahaanId: p1.id,
-      createdAt: addDays(now, -5),
+      createdAt: addDays(now, -10),
     },
   });
 
   await prisma.perpanjangan.create({
     data: {
       memberId: m3.id,
-      paketId: paketFamily.id,
-      tglMulai: addDays(now, -57),
-      tglBerakhir: addDays(now, 3),
-      hargaDibayar: 300000,
+      paketId: paketPremium.id,
+      tglMulai: addDays(now, -26),
+      tglBerakhir: addDays(now, 4),
+      hargaDibayar: 200000,
       adminId: admin1.id,
       perusahaanId: p1.id,
-      createdAt: addDays(now, -57),
+      createdAt: addDays(now, -26),
     },
   });
 
   await prisma.perpanjangan.create({
     data: {
-      memberId: m2.id,
-      paketId: paketHemat.id,
-      tglMulai: addDays(now, -15),
-      tglBerakhir: addDays(now, 15),
-      hargaDibayar: 70000,
+      memberId: m4.id,
+      paketId: paketBasic.id,
+      tglMulai: addDays(now, -29),
+      tglBerakhir: addDays(now, 1),
+      hargaDibayar: 100000,
       adminId: admin1.id,
       perusahaanId: p1.id,
-      createdAt: addDays(now, -15),
+      createdAt: addDays(now, -29),
     },
   });
 

@@ -68,8 +68,8 @@ model Member {
   paket        Paket          @relation(fields: [paketId], references: [id])
   kuotaAwal    Float
   sisaKuota    Float
-  tglMulai     DateTime
-  tglBerakhir  DateTime
+  tglMulai     DateTime?
+  tglBerakhir  DateTime?
   status       String         @default("AKTIF")
   perusahaanId String?
   perusahaan   Perusahaan?    @relation(fields: [perusahaanId], references: [id], onDelete: Cascade)
@@ -109,8 +109,8 @@ model Perpanjangan {
   member       Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
   paketId      String
   paket        Paket       @relation(fields: [paketId], references: [id])
-  tglMulai     DateTime
-  tglBerakhir  DateTime
+  tglMulai     DateTime?
+  tglBerakhir  DateTime?
   hargaDibayar Int
   adminId      String
   admin        Admin       @relation(fields: [adminId], references: [id])

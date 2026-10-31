@@ -218,11 +218,14 @@ const MemberForm = () => {
 
                 {selectedPaket && (
                   <div className="mt-2 p-2.5 bg-sky-50 border border-sky-200 rounded-lg text-xs text-sky-800 flex items-center justify-between">
-                    <span>
-                      Kuota otomatis:{" "}
-                      <strong>{selectedPaket.kuotaKg} kg</strong> (Aktif{" "}
-                      <strong>{selectedPaket.durasiHari} hari</strong>)
-                    </span>
+                    <div>
+                      <span>
+                        Kuota: <strong>{selectedPaket.kuotaKg} kg</strong>
+                      </span>
+                      <p className="text-[10px] text-sky-600 mt-0.5">
+                        *Masa aktif 30 hari otomatis tercatat sejak penyerahan pakaian pertama
+                      </p>
+                    </div>
                     <span className="font-extrabold text-sm text-sky-900">
                       {formatRupiah(selectedPaket.harga)}
                     </span>

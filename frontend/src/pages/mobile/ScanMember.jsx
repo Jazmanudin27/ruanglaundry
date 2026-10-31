@@ -252,6 +252,15 @@ const ScanMember = () => {
               </span>
             </div>
 
+            {!member.tglMulai && (
+              <div className="p-2.5 bg-sky-50 border border-sky-200 rounded-xl text-sky-800 text-[11px] flex items-center gap-2">
+                <span className="text-base">ℹ️</span>
+                <span>
+                  <strong>Penyerahan Pakaian Pertama:</strong> Masa aktif 30 hari paket akan otomatis tercatat aktif mulai hari ini!
+                </span>
+              </div>
+            )}
+
             {member.isExpired ? (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs space-y-2">
                 <p>Masa aktif paket member sudah berakhir. Perpanjang paket dulu.</p>

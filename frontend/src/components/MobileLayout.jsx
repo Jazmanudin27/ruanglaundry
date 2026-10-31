@@ -96,7 +96,7 @@ const MobileLayout = () => {
             >
               <Layers className="w-3.5 h-3.5 text-sky-200" />
               <span className="text-xs font-extrabold tracking-wide text-white">
-                Ruang Laundry
+                Basmalah Wash
               </span>
             </NavLink>
 

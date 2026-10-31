@@ -357,11 +357,12 @@ export default function Members() {
                 <th className="td-center" style={{ width: "32px" }}>
                   NO
                 </th>
-                <th>NAMA MEMBER & NO. HP</th>
-                <th>UID KARTU NFC</th>
-                <th>PAKET LAUNDRY</th>
+                <th>NAMA MEMBER & WHATSAPP</th>
+                <th>KARTU RFID</th>
+                <th>PAKET</th>
+                <th className="td-center">PEMAKAIAN / KUOTA</th>
                 <th className="td-center">SISA KUOTA</th>
-                <th>MASA BERLAKU</th>
+                <th>MASA AKTIF (30 HARI)</th>
                 <th className="td-center">STATUS</th>
                 <th className="td-center" style={{ width: "135px" }}>
                   AKSI
@@ -469,6 +470,16 @@ export default function Members() {
                       </span>
                     </td>
 
+                    {/* Pemakaian & Kuota Awal */}
+                    <td className="td-center">
+                      <div style={{ fontWeight: 700, fontSize: "0.74rem", color: "#475569" }}>
+                        {row.totalPemakaian || 0} kg
+                      </div>
+                      <div style={{ fontSize: "0.62rem", color: "#94a3b8" }}>
+                        dari awal {row.kuotaAwal} kg
+                      </div>
+                    </td>
+
                     {/* Sisa Kuota */}
                     <td className="td-center">
                       <div
@@ -476,7 +487,7 @@ export default function Members() {
                           fontWeight: 800,
                           fontSize: "0.78rem",
                           color:
-                            row.sisaKuota <= 2
+                            row.sisaKuota <= 0
                               ? "#b91c1c"
                               : row.sisaKuota <= 5
                                 ? "#b45309"
@@ -494,56 +505,74 @@ export default function Members() {
                           kg
                         </span>
                       </div>
-                      <div style={{ fontSize: "0.6rem", color: "#64748b" }}>
-                        dari {row.kuotaAwal} kg
-                      </div>
+                      {row.sisaKuota <= 0 && (
+                        <span style={{ fontSize: "0.58rem", color: "#b91c1c", fontWeight: 700 }}>
+                          Habis
+                        </span>
+                      )}
                     </td>
 
-                    {/* Masa Berlaku */}
+                    {/* Masa Berlaku (30 Hari Sejak Cuci Pertama) */}
                     <td>
-                      <div
-                        style={{
-                          fontWeight: 600,
-                          color: "#0f172a",
-                          fontSize: "0.7rem",
-                        }}
-                      >
-                        s/d {formatTanggal(row.tglBerakhir)}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "0.64rem",
-                          color: isExpired
-                            ? "#b91c1c"
-                            : isExpiringSoon
-                              ? "#b45309"
-                              : "#059669",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {isExpired
-                          ? `Lewat ${Math.abs(row.daysLeft)} hari`
-                          : `Sisa ${row.daysLeft} hari lagi`}
-                      </div>
+                      {!row.tglMulai ? (
+                        <div>
+                          <div style={{ fontWeight: 700, color: "#0284c7", fontSize: "0.68rem" }}>
+                            Belum Dimulai
+                          </div>
+                          <div style={{ fontSize: "0.62rem", color: "#64748b" }}>
+                            Aktif 30 hari saat cuci pertama
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div
+                            style={{
+                              fontWeight: 600,
+                              color: "#0f172a",
+                              fontSize: "0.7rem",
+                            }}
+                          >
+                            s/d {formatTanggal(row.tglBerakhir)}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "0.64rem",
+                              color:
+                                row.statusBadge === "MERAH"
+                                  ? "#b91c1c"
+                                  : row.statusBadge === "KUNING"
+                                    ? "#b45309"
+                                    : "#059669",
+                              fontWeight: 700,
+                            }}
+                          >
+                            {row.isExpired
+                              ? `Lewat ${Math.abs(row.daysLeft)} hari`
+                              : `Sisa ${row.daysLeft} hari`}
+                          </div>
+                        </div>
+                      )}
                     </td>
 
-                    {/* Status Badge */}
+                    {/* Status Badge 3 Warna Basmalah Wash */}
                     <td className="td-center">
-                      <span
-                        className={`badge ${
-                          isExpired
-                            ? "badge-danger"
-                            : isExpiringSoon
-                              ? "badge-warning"
-                              : "badge-success"
-                        }`}
-                      >
-                        {isExpired
-                          ? "Kedaluwarsa"
-                          : isExpiringSoon
-                            ? "Hampir Habis"
-                            : "Aktif"}
-                      </span>
+                      {!row.tglMulai ? (
+                        <span className="badge badge-info" title="Menunggu cucian pertama untuk mengaktifkan masa 30 hari">
+                          🔵 Belum Mulai
+                        </span>
+                      ) : row.statusBadge === "MERAH" ? (
+                        <span className="badge badge-danger" title="Masa aktif tersisa 1 hari atau sudah berakhir">
+                          🔴 {row.isExpired ? "Kedaluwarsa" : "Sisa 1 Hari"}
+                        </span>
+                      ) : row.statusBadge === "KUNING" ? (
+                        <span className="badge badge-warning" title="Masa aktif tersisa 3-5 hari (Perlu dihubungi)">
+                          🟡 Sisa {row.daysLeft} Hari
+                        </span>
+                      ) : (
+                        <span className="badge badge-success" title="Paket masih aktif">
+                          🟢 Aktif
+                        </span>
+                      )}
                     </td>
 
                     {/* Aksi Buttons (Compact 24x24 / SM) */}

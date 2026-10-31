@@ -319,6 +319,16 @@ const ScanMember = () => {
                 </div>
               </div>
 
+              {/* Info penyerahan cucian pertama */}
+              {!member.tglMulai && (
+                <div className="p-3 bg-sky-50 border border-sky-200 rounded-md text-sky-800 text-xs flex items-center gap-2">
+                  <span className="text-base">ℹ️</span>
+                  <span>
+                    <strong>Penyerahan Pakaian Pertama:</strong> Masa aktif 30 hari paket member ini akan otomatis mulai dihitung sejak transaksi penimbangan ini disimpan!
+                  </span>
+                </div>
+              )}
+
               {/* Jika masa aktif kedaluwarsa atau kuota 0 */}
               {member.isExpired ? (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-amber-800 text-xs flex items-center justify-between">

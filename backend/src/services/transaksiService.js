@@ -20,22 +20,37 @@ export const createTransaksi = async ({ memberId, beratKg, catatan, rakPenyimpan
     throw new Error('Status member tidak aktif');
   }
 
-  // 2. Periksa masa aktif belum lewat (tglBerakhir >= hari ini)
+  // 2. Periksa masa aktif jika sudah berjalan
   const now = new Date();
-  if (new Date(member.tglBerakhir) < now) {
-    throw new Error('Masa aktif sudah habis, silakan perpanjang');
+  if (member.tglBerakhir && new Date(member.tglBerakhir) < now) {
+    throw new Error('Masa aktif paket sudah habis, silakan lakukan perpanjangan paket.');
   }
 
   // 3. Periksa beratKg <= sisaKuota
-  const sisaSebelum = parseFloat(member.sisaKuota);
+  const sisaSebelum = parseFloat(member.sisaKuota || 0);
+  if (sisaSebelum <= 0) {
+    throw new Error('Sisa kuota paket habis (0 kg). Member wajib memperpanjang paket terlebih dahulu.');
+  }
   if (berat > sisaSebelum) {
-    throw new Error(`Sisa kuota ${sisaSebelum} kg`);
+    throw new Error(`Sisa kuota hanya tersisa ${sisaSebelum} kg, tidak cukup untuk mencuci ${berat} kg.`);
   }
 
   const sisaSesudah = +(sisaSebelum - berat).toFixed(2);
   const beratVal = +(berat.toFixed(2));
   const sisaSebelumVal = +(sisaSebelum.toFixed(2));
   const sisaSesudahVal = +(sisaSesudah.toFixed(2));
+
+  // Cek apakah ini penyerahan pakaian pertama di periode ini (tglMulai masih null)
+  const isFirstLaundryInPeriod = !member.tglMulai;
+  let newTglMulai = member.tglMulai;
+  let newTglBerakhir = member.tglBerakhir;
+
+  if (isFirstLaundryInPeriod) {
+    newTglMulai = now;
+    const durasi = member.paket?.durasiHari || 30;
+    newTglBerakhir = new Date(now);
+    newTglBerakhir.setDate(newTglBerakhir.getDate() + durasi);
+  }
 
   // 4. Jalankan dalam SATU prisma.$transaction dengan atomic conditional update
   return await prisma.$transaction(async (tx) => {
@@ -47,6 +62,12 @@ export const createTransaksi = async ({ memberId, beratKg, catatan, rakPenyimpan
       },
       data: {
         sisaKuota: { decrement: beratVal },
+        ...(isFirstLaundryInPeriod
+          ? {
+              tglMulai: newTglMulai,
+              tglBerakhir: newTglBerakhir,
+            }
+          : {}),
       },
     });
 
@@ -76,6 +97,9 @@ export const createTransaksi = async ({ memberId, beratKg, catatan, rakPenyimpan
     return {
       transaksi: transaksiRecord,
       sisaKuotaBaru: sisaSesudahVal,
+      tglMulai: newTglMulai,
+      tglBerakhir: newTglBerakhir,
+      isFirstLaundryInPeriod,
     };
   });
 };

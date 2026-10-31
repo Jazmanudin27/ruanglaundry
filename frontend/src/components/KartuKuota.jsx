@@ -10,22 +10,35 @@ const KartuKuota = ({ member }) => {
   const totalPemakaian = parseFloat(member.totalPemakaian || Math.max(0, kuotaAwal - sisaKuota));
   const persentaseSisa = kuotaAwal > 0 ? Math.min(100, Math.max(0, (sisaKuota / kuotaAwal) * 100)) : 0;
 
-  // Status visual
+  // Status visual sesuai ketentuan Basmalah Wash (Hijau: Aktif, Kuning: 3-5 hari, Merah: <=1 hari / Expired)
+  const isBelumMulai = !member.tglMulai || !member.tglBerakhir;
   const isExpired = member.isExpired || (member.daysLeft !== undefined && member.daysLeft < 0);
-  const isExpiringSoon = !isExpired && member.isExpiringSoon;
+  const daysLeft = member.daysLeft;
 
-  let badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-  let badgeLabel = 'Member Aktif';
+  let badgeColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+  let badgeLabel = '🟢 Paket Aktif';
   let badgeIcon = ShieldCheck;
 
-  if (isExpired) {
-    badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
-    badgeLabel = 'Kedaluwarsa';
+  if (isBelumMulai) {
+    badgeColor = 'bg-sky-500/20 text-sky-300 border-sky-400/40';
+    badgeLabel = '🔵 Menunggu Cuci 1';
+    badgeIcon = Clock;
+  } else if (isExpired) {
+    badgeColor = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+    badgeLabel = '🔴 Kedaluwarsa';
     badgeIcon = AlertOctagon;
-  } else if (isExpiringSoon) {
-    badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
-    badgeLabel = 'Hampir Habis';
+  } else if (daysLeft <= 1) {
+    badgeColor = 'bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse';
+    badgeLabel = daysLeft === 0 ? '🔴 Habis Hari Ini' : '🔴 Sisa 1 Hari';
+    badgeIcon = AlertOctagon;
+  } else if (daysLeft >= 2 && daysLeft <= 5) {
+    badgeColor = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+    badgeLabel = `🟡 Sisa ${daysLeft} Hari`;
     badgeIcon = AlertTriangle;
+  } else {
+    badgeColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+    badgeLabel = `🟢 Aktif (${daysLeft} Hari)`;
+    badgeIcon = ShieldCheck;
   }
 
   const BadgeIconComponent = badgeIcon;
@@ -110,13 +123,21 @@ const KartuKuota = ({ member }) => {
       <div className="mt-3 pt-2 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-slate-400 relative z-10 flex-wrap gap-2">
         <div className="flex items-center gap-1">
           <Calendar className="w-3 h-3 text-sky-400" />
-          <span>Berlaku: <strong className="text-slate-200">{formatTanggal(member.tglBerakhir)}</strong></span>
+          <span>
+            {isBelumMulai ? (
+              <span className="text-sky-300 font-semibold">Aktif: 30 hari sejak cuci pertama</span>
+            ) : (
+              <span>Berlaku s/d: <strong className="text-slate-200">{formatTanggal(member.tglBerakhir)}</strong></span>
+            )}
+          </span>
         </div>
 
         <div className="flex items-center gap-1">
           <Clock className="w-3 h-3 text-sky-400" />
           <span>
-            {isExpired ? (
+            {isBelumMulai ? (
+              <span className="text-sky-300 font-bold">Belum Mulai</span>
+            ) : isExpired ? (
               <span className="text-rose-400 font-bold">Kedaluwarsa {Math.abs(member.daysLeft || 0)} hari</span>
             ) : (
               <span>Sisa <strong>{member.daysLeft !== undefined ? member.daysLeft : '-'} hari</strong></span>

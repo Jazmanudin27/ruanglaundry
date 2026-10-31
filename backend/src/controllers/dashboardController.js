@@ -28,12 +28,15 @@ export const getRingkasanDashboard = async (req, res, next) => {
       return acc + parseFloat(curr.beratKg || 0);
     }, 0);
 
-    // 2. Total Member Aktif
+    // 2. Total Member Aktif (Masa aktif belum lewat atau baru daftar belum cuci 1)
     const now = new Date();
     const totalMemberAktif = await prisma.member.count({
       where: {
         status: 'AKTIF',
-        tglBerakhir: { gte: now },
+        OR: [
+          { tglBerakhir: { gte: now } },
+          { tglBerakhir: null },
+        ],
       },
     });
 

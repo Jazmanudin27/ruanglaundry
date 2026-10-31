@@ -92,7 +92,7 @@ const Dashboard = () => {
         <div className="stat-card-colored stat-card-amber">
           <div>
             <div className="stat-colored-title">
-              PERLU PERPANJANGAN (≤7 HARI)
+              REMINDER MASA AKTIF (≤5 HARI)
             </div>
             <div className="stat-colored-number">
               {loading ? "..." : data?.statistik?.totalHampirHabis || 0}
@@ -272,17 +272,17 @@ const Dashboard = () => {
                   NO
                 </th>
                 <th>NAMA MEMBER</th>
-                <th>UID KARTU</th>
+                <th>KARTU RFID</th>
                 <th>PAKET</th>
                 <th className="td-center">SISA KUOTA</th>
-                <th>MASA BERLAKU</th>
-                <th className="td-center" style={{ width: "100px" }}>
+                <th>STATUS MASA AKTIF</th>
+                <th className="td-center" style={{ width: "160px" }}>
                   AKSI
                 </th>
               </tr>
             </thead>
             <tbody>
-              {data.memberHampirHabis.slice(0, 5).map((m, idx) => (
+              {data.memberHampirHabis.slice(0, 8).map((m, idx) => (
                 <tr key={m.id}>
                   <td
                     className="td-center"
@@ -328,25 +328,61 @@ const Dashboard = () => {
                     </span>
                   </td>
                   <td className="td-center">
-                    <strong style={{ color: "#b45309", fontSize: "0.76rem" }}>
+                    <strong
+                      style={{
+                        color: m.sisaKuota <= 0 ? "#b91c1c" : "#b45309",
+                        fontSize: "0.76rem",
+                      }}
+                    >
                       {m.sisaKuota} kg
                     </strong>
                   </td>
-                  <td style={{ fontSize: "0.68rem", color: "#475569" }}>
-                    s/d {formatTanggal(m.tglBerakhir)} (
-                    {m.daysLeft <= 0
-                      ? "Kedaluwarsa"
-                      : `Sisa ${m.daysLeft} hari`}
-                    )
+                  <td>
+                    {m.statusBadge === "MERAH" ? (
+                      <span
+                        className="badge badge-danger"
+                        style={{ fontSize: "0.64rem" }}
+                      >
+                        🔴 {m.isExpired ? "Kedaluwarsa" : "Tersisa ≤ 1 Hari"}
+                      </span>
+                    ) : (
+                      <span
+                        className="badge badge-warning"
+                        style={{ fontSize: "0.64rem" }}
+                      >
+                        🟡 Tersisa {m.daysLeft} Hari (3-5 Hari)
+                      </span>
+                    )}
                   </td>
                   <td className="td-center">
-                    <Link
-                      to={`/members/${m.id}?tab=perpanjang`}
-                      className="btn btn-primary"
-                      style={{ padding: "2px 8px", fontSize: "0.66rem" }}
-                    >
-                      Perpanjang
-                    </Link>
+                    <div className="flex items-center justify-center gap-1">
+                      {m.noHp && (
+                        <a
+                          href={`https://wa.me/${m.noHp.replace(/^0/, "62")}?text=${encodeURIComponent(
+                            `Halo Kak *${m.nama}*,\n\nKami dari *Basmalah Wash* ingin menginfokan bahwa masa aktif paket laundry Kakak tersisa *${m.daysLeft || 0} hari* (Sisa kuota: *${m.sisaKuota} kg*).\n\nSilakan lakukan perpanjangan paket agar dapat terus menikmati layanan laundry kami. Terima kasih! 🙏`,
+                          )}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn btn-outline"
+                          style={{
+                            padding: "2px 6px",
+                            fontSize: "0.64rem",
+                            color: "#059669",
+                            borderColor: "#6ee7b7",
+                          }}
+                          title="Hubungi via WhatsApp"
+                        >
+                          Hubungi WA
+                        </a>
+                      )}
+                      <Link
+                        to={`/members/${m.id}?tab=perpanjang`}
+                        className="btn btn-primary"
+                        style={{ padding: "2px 8px", fontSize: "0.64rem" }}
+                      >
+                        Perpanjang
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}
