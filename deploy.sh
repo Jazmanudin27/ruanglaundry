@@ -13,7 +13,7 @@ pm2 restart laundry-backend
 
 echo "⚡ [3/3] Build Frontend Production..."
 cd ../frontend
-npm install --omit=dev
+npm install
 npm run build
 
 echo "✅ Deploy selesai! Aplikasi Basmalah Wash siap dipakai."
