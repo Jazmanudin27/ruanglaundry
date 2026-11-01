@@ -23,6 +23,7 @@ import {
   formatTanggalWaktu,
   formatRupiah,
 } from "../../utils/nfcHelper";
+import showAlert from "../../utils/sweetalert";
 
 const MemberDetail = () => {
   const { id } = useParams();
@@ -93,12 +94,14 @@ const MemberDetail = () => {
       });
 
       if (res.success) {
+        showAlert.success("Berhasil!", "Paket member berhasil diperpanjang");
         setSuccessPerpanjangMsg("Paket member berhasil diperpanjang!");
         fetchMemberData();
         setActiveTab("riwayat");
       }
     } catch (err) {
       setErrorMsg(err.message || "Gagal memperpanjang paket");
+      showAlert.error("Gagal Perpanjang", err.message);
     } finally {
       setSubmittingPerpanjang(false);
     }
@@ -107,11 +110,11 @@ const MemberDetail = () => {
   const handleGantiKartu = async (uidBaru) => {
     try {
       await memberApi.gantiKartu(id, uidBaru);
-      alert(`Kartu member berhasil diganti ke UID: ${uidBaru}`);
+      showAlert.success("Kartu Terhubung!", `Kartu member berhasil diganti ke UID: ${uidBaru}`);
       setIsModalGantiOpen(false);
       fetchMemberData();
     } catch (err) {
-      alert(err.message || "Gagal mengganti kartu");
+      showAlert.error("Gagal Mengganti Kartu", err.message);
     }
   };
 

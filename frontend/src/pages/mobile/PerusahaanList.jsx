@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { perusahaanApi } from '../../api';
 import { formatTanggal, formatRupiah } from '../../utils/nfcHelper';
+import showAlert from '../../utils/sweetalert';
 
 const PerusahaanList = () => {
   const [list, setList] = useState([]);
@@ -47,19 +48,20 @@ const PerusahaanList = () => {
   }, []);
 
   const handlePerpanjangLisensi = async (p) => {
-    if (
-      window.confirm(
-        `Perpanjang lisensi SaaS +30 hari untuk "${p.namaPerusahaan}"?`
-      )
-    ) {
+    const yakin = await showAlert.confirm(
+      'Perpanjang Lisensi SaaS?',
+      `Perpanjang lisensi SaaS +30 hari untuk "${p.namaPerusahaan}"?`,
+      'Ya, Perpanjang'
+    );
+    if (yakin) {
       try {
         const res = await perusahaanApi.perpanjangLangganan(p.id, {
           tambahanHari: 30,
         });
-        alert(res.message || 'Langganan berhasil diperpanjang!');
+        showAlert.success('Berhasil!', res.message || 'Langganan berhasil diperpanjang');
         fetchPerusahaan();
       } catch (err) {
-        alert(err.message || 'Gagal memperpanjang langganan');
+        showAlert.error('Gagal Perpanjang', err.message);
       }
     }
   };
@@ -72,7 +74,7 @@ const PerusahaanList = () => {
         ...formData,
         tarifBulanan: parseInt(formData.tarifBulanan),
       });
-      alert('Outlet baru berhasil didaftarkan!');
+      showAlert.success('Berhasil!', 'Outlet baru berhasil didaftarkan');
       setIsModalOpen(false);
       setFormData({
         namaPerusahaan: '',
@@ -84,7 +86,7 @@ const PerusahaanList = () => {
       });
       fetchPerusahaan();
     } catch (err) {
-      alert(err.message || 'Gagal mendaftarkan perusahaan');
+      showAlert.error('Gagal Mendaftar', err.message);
     } finally {
       setSubmitting(false);
     }

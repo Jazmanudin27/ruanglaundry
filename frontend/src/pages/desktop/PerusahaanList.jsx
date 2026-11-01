@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { perusahaanApi } from "../../api";
 import { formatTanggal, formatRupiah } from "../../utils/nfcHelper";
+import showAlert from "../../utils/sweetalert";
 
 const PerusahaanList = () => {
   const [list, setList] = useState([]);
@@ -56,19 +57,20 @@ const PerusahaanList = () => {
   }, []);
 
   const handlePerpanjangLisensi = async (p) => {
-    if (
-      window.confirm(
-        `Konfirmasi pembayaran langganan SaaS Rp 200.000 untuk "${p.namaPerusahaan}"?\nMasa aktif akan diperpanjang +30 hari.`,
-      )
-    ) {
+    const yakin = await showAlert.confirm(
+      "Perpanjang Lisensi SaaS?",
+      `Konfirmasi pembayaran langganan SaaS Rp 200.000 untuk "${p.namaPerusahaan}"?\nMasa aktif akan diperpanjang +30 hari.`,
+      "Ya, Perpanjang"
+    );
+    if (yakin) {
       try {
         const res = await perusahaanApi.perpanjangLangganan(p.id, {
           tambahanHari: 30,
         });
-        alert(res.message || "Langganan berhasil diperpanjang!");
+        showAlert.success("Berhasil!", res.message || "Langganan berhasil diperpanjang");
         fetchPerusahaan();
       } catch (err) {
-        alert(err.message || "Gagal memperpanjang langganan");
+        showAlert.error("Gagal Memperpanjang", err.message);
       }
     }
   };
@@ -81,8 +83,9 @@ const PerusahaanList = () => {
         ...formData,
         tarifBulanan: parseInt(formData.tarifBulanan),
       });
-      alert(
-        "Perusahaan / Outlet laundry baru berhasil didaftarkan dengan lisensi aktif 30 hari!",
+      showAlert.success(
+        "Berhasil!",
+        "Perusahaan / Outlet laundry baru berhasil didaftarkan dengan lisensi aktif 30 hari!"
       );
       setIsModalOpen(false);
       setFormData({
@@ -95,7 +98,7 @@ const PerusahaanList = () => {
       });
       fetchPerusahaan();
     } catch (err) {
-      alert(err.message || "Gagal mendaftarkan perusahaan");
+      showAlert.error("Gagal Mendaftar", err.message);
     } finally {
       setSubmitting(false);
     }

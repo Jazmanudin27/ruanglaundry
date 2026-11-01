@@ -10,6 +10,7 @@ import {
 import { memberApi, paketApi } from '../../api';
 import ModalScanKartu from '../../components/ModalScanKartu';
 import { formatRupiah } from '../../utils/nfcHelper';
+import showAlert from '../../utils/sweetalert';
 
 const MemberForm = () => {
   const { id } = useParams();
@@ -73,7 +74,7 @@ const MemberForm = () => {
           uidKartu: uidKartu || null,
           status,
         });
-        alert('Data member berhasil diperbarui!');
+        await showAlert.success('Berhasil!', 'Data member berhasil diperbarui');
       } else {
         await memberApi.create({
           nama,
@@ -81,11 +82,12 @@ const MemberForm = () => {
           uidKartu: uidKartu || null,
           paketId,
         });
-        alert('Member baru berhasil didaftarkan!');
+        await showAlert.success('Berhasil!', 'Member baru berhasil didaftarkan');
       }
       navigate('/members');
     } catch (err) {
       setErrorMsg(err.message || 'Gagal menyimpan data');
+      showAlert.error('Gagal Menyimpan', err.message);
     } finally {
       setLoading(false);
     }

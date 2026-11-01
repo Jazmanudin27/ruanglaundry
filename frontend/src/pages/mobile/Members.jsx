@@ -17,6 +17,7 @@ import {
 import { memberApi } from "../../api";
 import { formatTanggal } from "../../utils/nfcHelper";
 import ModalScanKartu from "../../components/ModalScanKartu";
+import showAlert from "../../utils/sweetalert";
 
 const Members = () => {
   const navigate = useNavigate();
@@ -49,16 +50,18 @@ const Members = () => {
   }, []);
 
   const handleDelete = async (id, nama) => {
-    if (
-      window.confirm(
-        `Hapus member "${nama}" beserta seluruh riwayat transaksinya?`,
-      )
-    ) {
+    const yakin = await showAlert.confirm(
+      "Hapus Member?",
+      `Hapus member "${nama}" beserta seluruh riwayat transaksinya?`,
+      "Ya, Hapus"
+    );
+    if (yakin) {
       try {
         await memberApi.delete(id);
+        showAlert.success("Member Berhasil Dihapus");
         fetchMembers();
       } catch (err) {
-        alert(err.message || "Gagal menghapus member");
+        showAlert.error("Gagal Menghapus Member", err.message);
       }
     }
   };
@@ -67,14 +70,15 @@ const Members = () => {
     if (!gantiKartuMember) return;
     try {
       await memberApi.gantiKartu(gantiKartuMember.id, uidBaru);
-      alert(
-        `Kartu NFC member ${gantiKartuMember.nama} berhasil dihubungkan ke UID: ${uidBaru}`,
+      showAlert.success(
+        "Kartu Terhubung!",
+        `Member ${gantiKartuMember.nama} berhasil dihubungkan ke UID: ${uidBaru}`
       );
       setIsModalGantiOpen(false);
       setGantiKartuMember(null);
       fetchMembers();
     } catch (err) {
-      alert(err.message || "Gagal mengganti kartu");
+      showAlert.error("Gagal Mengganti Kartu", err.message);
     }
   };
 

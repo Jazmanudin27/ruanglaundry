@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { paketApi } from "../../api";
 import { formatRupiah } from "../../utils/nfcHelper";
+import showAlert from "../../utils/sweetalert";
 
 const PaketList = () => {
   const [pakets, setPakets] = useState([]);
@@ -88,28 +89,35 @@ const PaketList = () => {
 
       if (editPaketId) {
         await paketApi.update(editPaketId, payload);
+        showAlert.success("Paket Diperbarui");
       } else {
         await paketApi.create(payload);
+        showAlert.success("Paket Dibuat");
       }
 
       setIsModalOpen(false);
       fetchPakets();
     } catch (err) {
       setErrorMsg(err.message || "Gagal menyimpan paket");
+      showAlert.error("Gagal Menyimpan", err.message);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id, nama) => {
-    if (
-      window.confirm(`Yakin ingin menghapus / menonaktifkan paket "${nama}"?`)
-    ) {
+    const yakin = await showAlert.confirm(
+      "Hapus Paket?",
+      `Yakin ingin menghapus / menonaktifkan paket "${nama}"?`,
+      "Ya, Hapus"
+    );
+    if (yakin) {
       try {
         await paketApi.delete(id);
+        showAlert.success("Paket Dihapus");
         fetchPakets();
       } catch (err) {
-        alert(err.message || "Gagal menghapus paket");
+        showAlert.error("Gagal Menghapus", err.message);
       }
     }
   };

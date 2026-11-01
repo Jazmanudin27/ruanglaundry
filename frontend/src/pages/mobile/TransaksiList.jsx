@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { transaksiApi } from '../../api';
 import { formatTanggalWaktu } from '../../utils/nfcHelper';
+import showAlert from '../../utils/sweetalert';
 
 const TransaksiList = () => {
   const [transaksi, setTransaksi] = useState([]);
@@ -110,9 +111,10 @@ const TransaksiList = () => {
           setModalStatus(res.data.statusCucian);
           setModalRak(res.data.rakPenyimpanan || '');
         }
+        showAlert.toast('Status cucian diperbarui');
       }
     } catch (err) {
-      alert(err.message || 'Gagal mengubah status cucian');
+      showAlert.error('Gagal Update Status', err.message);
     }
   };
 

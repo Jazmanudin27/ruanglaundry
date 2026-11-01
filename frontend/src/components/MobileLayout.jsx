@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useViewMode } from '../context/ViewModeContext';
+import showAlert from '../utils/sweetalert';
 
 const MobileLayout = () => {
   const { user, logout } = useAuth();
@@ -35,8 +36,9 @@ const MobileLayout = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const handleLogout = () => {
-    if (window.confirm('Keluar dari akun kasir/admin?')) {
+  const handleLogout = async () => {
+    const yakin = await showAlert.confirm('Keluar dari Akun?', 'Apakah Anda yakin ingin keluar dari sistem?', 'Ya, Keluar');
+    if (yakin) {
       logout();
       navigate('/login');
     }

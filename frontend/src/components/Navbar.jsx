@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useViewMode } from '../context/ViewModeContext';
+import showAlert from '../utils/sweetalert';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -36,8 +37,9 @@ const Navbar = () => {
     }
   };
 
-  const handleLogout = () => {
-    if (window.confirm('Apakah Anda yakin ingin keluar dari sistem?')) {
+  const handleLogout = async () => {
+    const yakin = await showAlert.confirm('Keluar dari Sistem?', 'Apakah Anda yakin ingin keluar dari akun ini?', 'Ya, Keluar');
+    if (yakin) {
       logout();
       navigate('/login');
     }
