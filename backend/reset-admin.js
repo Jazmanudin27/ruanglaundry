@@ -20,7 +20,7 @@ async function main() {
       data: {
         namaPerusahaan: 'Basmalah Wash',
         kodePerusahaan: 'BW-01',
-        namaOwner: 'Owner Basmalah Wash',
+        namaOwner: 'Muqodas',
         noHpOwner: '081234567890',
         alamat: 'Jl. Utama Basmalah Wash No. 1',
         tglMulaiLangganan: now,
@@ -29,37 +29,48 @@ async function main() {
         tarifBulanan: 200000,
       },
     });
-    console.log('✅ Perusahaan "Basmalah Wash" berhasil disiapkan.');
+    console.log('✅ Perusahaan "Basmalah Wash" berhasil disiapkan (Owner: Muqodas).');
   } else {
-    // Pastikan status langganan aktif
+    // Pastikan status langganan aktif dan update owner
     await prisma.perusahaan.update({
       where: { id: perusahaan.id },
       data: {
+        namaOwner: 'Muqodas',
         statusLangganan: 'AKTIF',
         tglBerakhirLangganan: nextYear,
       },
     });
   }
 
-  // 2. Hash Password Default: admin123
-  const passwordHash = await bcrypt.hash('admin123', 10);
+  // 2. Hash Password Default: 123456
+  const passwordHash = await bcrypt.hash('123456', 10);
 
-  // 3. Upsert Akun Admin Outlet
-  const admin = await prisma.admin.upsert({
-    where: { username: 'admin' },
-    update: {
-      passwordHash,
-      role: 'ADMIN',
-      perusahaanId: perusahaan.id,
-    },
-    create: {
-      nama: 'Admin Basmalah Wash',
-      username: 'admin',
-      passwordHash,
-      role: 'ADMIN',
-      perusahaanId: perusahaan.id,
-    },
-  });
+  // 3. User List
+  const userList = [
+    { nama: 'Muqodas', username: 'muqodas', role: 'ADMIN' },
+    { nama: 'Reva', username: 'reva', role: 'KASIR' },
+    { nama: 'Ulul', username: 'ulul', role: 'KASIR' },
+    { nama: 'Admin Basmalah Wash', username: 'admin', role: 'ADMIN' },
+  ];
+
+  for (const u of userList) {
+    await prisma.admin.upsert({
+      where: { username: u.username },
+      update: {
+        nama: u.nama,
+        passwordHash,
+        role: u.role,
+        perusahaanId: perusahaan.id,
+      },
+      create: {
+        nama: u.nama,
+        username: u.username,
+        passwordHash,
+        role: u.role,
+        perusahaanId: perusahaan.id,
+      },
+    });
+  }
 
   // 4. Upsert Akun Super Owner
   const superowner = await prisma.admin.upsert({
@@ -78,16 +89,34 @@ async function main() {
   });
 
   console.log('==============================================');
-  console.log('       KREDENSIAL LOGIN BASMALAH WASH         ');
+  console.log('       DAFTAR LOGIN USER BASMALAH WASH        ');
   console.log('==============================================');
-  console.log('1. Akun Admin Outlet:');
-  console.log('   Username : admin');
-  console.log('   Password : admin123');
+  console.log('1. Owner (Admin Utama):');
+  console.log('   Nama     : Muqodas');
+  console.log('   Username : muqodas');
+  console.log('   Password : 123456');
   console.log('   Role     : ADMIN');
   console.log('----------------------------------------------');
-  console.log('2. Akun Super Owner SaaS:');
+  console.log('2. Kasir 1:');
+  console.log('   Nama     : Reva');
+  console.log('   Username : reva');
+  console.log('   Password : 123456');
+  console.log('   Role     : KASIR');
+  console.log('----------------------------------------------');
+  console.log('3. Kasir 2:');
+  console.log('   Nama     : Ulul');
+  console.log('   Username : ulul');
+  console.log('   Password : 123456');
+  console.log('   Role     : KASIR');
+  console.log('----------------------------------------------');
+  console.log('4. Admin Backup:');
+  console.log('   Username : admin');
+  console.log('   Password : 123456');
+  console.log('   Role     : ADMIN');
+  console.log('----------------------------------------------');
+  console.log('5. Super Owner SaaS:');
   console.log('   Username : superowner');
-  console.log('   Password : admin123');
+  console.log('   Password : 123456');
   console.log('   Role     : SUPER_OWNER');
   console.log('==============================================\n');
 }

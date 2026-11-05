@@ -52,8 +52,19 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('ruang_laundry_user');
   };
 
+  const updateUserData = (updatedAdmin, newToken) => {
+    if (updatedAdmin) {
+      setUser(updatedAdmin);
+      localStorage.setItem('ruang_laundry_user', JSON.stringify(updatedAdmin));
+    }
+    if (newToken) {
+      setToken(newToken);
+      localStorage.setItem('ruang_laundry_token', newToken);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!user, loading, login, logout, updateUserData }}>
       {children}
     </AuthContext.Provider>
   );

@@ -82,6 +82,36 @@ async function main() {
   // Admin Outlet 1 (Basmalah Wash)
   const admin1 = await prisma.admin.create({
     data: {
+      nama: 'Muqodas',
+      username: 'muqodas',
+      passwordHash,
+      role: 'ADMIN',
+      perusahaanId: p1.id,
+    },
+  });
+
+  await prisma.admin.create({
+    data: {
+      nama: 'Reva',
+      username: 'reva',
+      passwordHash,
+      role: 'KASIR',
+      perusahaanId: p1.id,
+    },
+  });
+
+  await prisma.admin.create({
+    data: {
+      nama: 'Ulul',
+      username: 'ulul',
+      passwordHash,
+      role: 'KASIR',
+      perusahaanId: p1.id,
+    },
+  });
+
+  await prisma.admin.create({
+    data: {
       nama: 'Admin Basmalah Wash',
       username: 'admin',
       passwordHash,

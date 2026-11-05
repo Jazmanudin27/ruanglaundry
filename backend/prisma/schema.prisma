@@ -41,7 +41,7 @@ model Admin {
   transaksi    Transaksi[]
   perpanjangan Perpanjangan[]
 
-  @@map("admins")
+  @@map("users")
 }
 
 model Paket {

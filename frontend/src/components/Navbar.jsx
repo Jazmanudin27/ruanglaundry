@@ -14,11 +14,13 @@ import {
   Building2,
   Menu,
   X,
-  Smartphone
+  Smartphone,
+  KeyRound,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useViewMode } from '../context/ViewModeContext';
 import showAlert from '../utils/sweetalert';
+import ModalPengaturanAkun from './ModalPengaturanAkun';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -26,6 +28,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isPengaturanOpen, setIsPengaturanOpen] = useState(false);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -122,22 +125,40 @@ const Navbar = () => {
               {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Profile Pill */}
-            <div className="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 rounded-full pl-1 pr-2.5 py-0.5 transition">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 text-white text-[10px] font-bold flex items-center justify-center shadow">
-                {user?.nama ? user.nama.substring(0, 2).toUpperCase() : 'AD'}
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="text-[11px] font-bold text-white leading-tight">
-                  {user?.nama || 'Super Admin'}
-                </span>
-                <span className="text-[8px] text-sky-400 font-medium leading-none">
-                  {user?.role || 'SUPERADMIN'}
-                </span>
-              </div>
+            {/* Profile Pill - Klik untuk ganti username & password */}
+            <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700/60 rounded-full pl-1 pr-2 py-0.5 transition">
               <button
+                type="button"
+                onClick={() => setIsPengaturanOpen(true)}
+                className="flex items-center gap-2 hover:opacity-80 transition group text-left"
+                title="Klik untuk Pengaturan Akun & Ganti Password"
+              >
+                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 text-white text-[10px] font-bold flex items-center justify-center shadow">
+                  {user?.nama ? user.nama.substring(0, 2).toUpperCase() : 'AD'}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-bold text-white leading-tight group-hover:text-sky-300 transition">
+                    {user?.nama || 'Super Admin'}
+                  </span>
+                  <span className="text-[8px] text-sky-400 font-medium leading-none">
+                    {user?.role || 'SUPERADMIN'}
+                  </span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsPengaturanOpen(true)}
+                className="p-1 text-slate-400 hover:text-sky-300 hover:bg-slate-700/50 rounded-full transition ml-0.5"
+                title="Ganti Username & Password"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                type="button"
                 onClick={handleLogout}
-                className="ml-1 text-slate-400 hover:text-rose-400 transition"
+                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-slate-700/50 rounded-full transition ml-0.5"
                 title="Keluar / Logout"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -183,12 +204,22 @@ const Navbar = () => {
           })}
 
           <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsPengaturanOpen(true);
+              }}
+              className="flex items-center gap-2 hover:opacity-80 transition"
+              title="Ganti Password"
+            >
               <div className="w-6 h-6 rounded-full bg-sky-500 text-white text-[10px] font-bold flex items-center justify-center">
                 {user?.nama ? user.nama.substring(0, 2).toUpperCase() : 'AD'}
               </div>
-              <span className="text-xs font-medium text-slate-300">{user?.nama}</span>
-            </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-medium text-slate-300">{user?.nama}</span>
+                <span className="text-[9px] text-sky-400 font-bold">Ganti Password</span>
+              </div>
+            </button>
             <button
               onClick={handleLogout}
               className="text-xs text-rose-400 font-semibold flex items-center gap-1 p-1.5"
@@ -199,6 +230,12 @@ const Navbar = () => {
           </div>
         </div>
       )}
+
+      {/* Modal Ganti Password & Pengaturan Akun */}
+      <ModalPengaturanAkun
+        isOpen={isPengaturanOpen}
+        onClose={() => setIsPengaturanOpen(false)}
+      />
     </header>
   );
 };

@@ -16,10 +16,12 @@ import {
   Sunrise,
   Sunset,
   Package,
+  KeyRound,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useViewMode } from '../context/ViewModeContext';
 import showAlert from '../utils/sweetalert';
+import ModalPengaturanAkun from './ModalPengaturanAkun';
 
 const MobileLayout = () => {
   const { user, logout } = useAuth();
@@ -27,6 +29,7 @@ const MobileLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [now, setNow] = useState(new Date());
+  const [isPengaturanOpen, setIsPengaturanOpen] = useState(false);
 
   // Live ticking clock setiap detik
   useEffect(() => {
@@ -105,6 +108,15 @@ const MobileLayout = () => {
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
+                onClick={() => setIsPengaturanOpen(true)}
+                className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition"
+                title="Ganti Username & Password"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-amber-300" />
+              </button>
+
+              <button
+                type="button"
                 onClick={() => navigate('/paket')}
                 className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition"
                 title="Master Paket Laundry"
@@ -132,10 +144,14 @@ const MobileLayout = () => {
             </div>
           </div>
 
-          {/* Baris 2: Avatar & Sapaan User */}
-          <div className="flex items-center gap-3 mb-3.5 px-0.5">
+          {/* Baris 2: Avatar & Sapaan User (Klik untuk pengaturan akun) */}
+          <div
+            onClick={() => setIsPengaturanOpen(true)}
+            className="flex items-center gap-3 mb-3.5 px-0.5 cursor-pointer hover:opacity-90 transition group"
+            title="Klik untuk Ganti Username & Password"
+          >
             <div className="relative">
-              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-lg font-extrabold text-white shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 group-hover:bg-white/30 backdrop-blur-md border border-white/30 flex items-center justify-center text-lg font-extrabold text-white shadow-sm transition">
                 {userInitial}
               </div>
               <span className="w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#25267a] absolute -bottom-0.5 -right-0.5" />
@@ -146,7 +162,7 @@ const MobileLayout = () => {
                 <GreetingIcon className="w-3 h-3 text-amber-300" />
                 <span>{greetingText}</span>
               </div>
-              <div className="text-base font-extrabold text-white truncate leading-tight">
+              <div className="text-base font-extrabold text-white truncate leading-tight group-hover:text-amber-200 transition">
                 {user?.nama || 'Admin Ruang Laundry'}
               </div>
               <div className="flex items-center gap-2 mt-1">
@@ -156,6 +172,9 @@ const MobileLayout = () => {
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/15 border border-white/20 text-[9px] font-bold text-white uppercase">
                   <Building2 className="w-2.5 h-2.5 text-sky-300" />
                   <span>OUTLET PUSAT</span>
+                </span>
+                <span className="text-[9px] text-amber-300 font-semibold underline ml-auto">
+                  Ubah Akun
                 </span>
               </div>
             </div>
@@ -208,6 +227,12 @@ const MobileLayout = () => {
             })}
           </nav>
         </div>
+
+        {/* Modal Ganti Password & Pengaturan Akun */}
+        <ModalPengaturanAkun
+          isOpen={isPengaturanOpen}
+          onClose={() => setIsPengaturanOpen(false)}
+        />
       </div>
     </div>
   );

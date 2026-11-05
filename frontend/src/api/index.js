@@ -3,6 +3,10 @@ import api from './axios';
 export const authApi = {
   login: (data) => api.post('/auth/login', data),
   getMe: () => api.get('/auth/me'),
+  updateProfile: (data) => api.put('/auth/profile', data),
+  getUsers: () => api.get('/auth/users'),
+  createUser: (data) => api.post('/auth/users', data),
+  deleteUser: (id) => api.delete(`/auth/users/${id}`),
 };
 
 export const memberApi = {
