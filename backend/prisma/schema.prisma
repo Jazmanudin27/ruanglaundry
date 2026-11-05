@@ -99,8 +99,8 @@ model Transaksi {
   tglSelesaiCuci DateTime?
   tglDiambil     DateTime?
   catatan        String?
-  adminId        String
-  admin          Admin       @relation(fields: [adminId], references: [id])
+  adminId        String?
+  admin          Admin?      @relation(fields: [adminId], references: [id])
   perusahaanId   String?
   perusahaan     Perusahaan? @relation(fields: [perusahaanId], references: [id], onDelete: Cascade)
   createdAt      DateTime    @default(now())
@@ -118,8 +118,8 @@ model Perpanjangan {
   tglMulai     DateTime?
   tglBerakhir  DateTime?
   hargaDibayar Int
-  adminId      String
-  admin        Admin       @relation(fields: [adminId], references: [id])
+  adminId      String?
+  admin        Admin?      @relation(fields: [adminId], references: [id])
   perusahaanId String?
   perusahaan   Perusahaan? @relation(fields: [perusahaanId], references: [id], onDelete: Cascade)
   createdAt    DateTime    @default(now())
