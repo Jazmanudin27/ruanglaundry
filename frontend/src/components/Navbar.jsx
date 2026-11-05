@@ -16,6 +16,7 @@ import {
   X,
   Smartphone,
   KeyRound,
+  Clock,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useViewMode } from '../context/ViewModeContext';
@@ -51,9 +52,10 @@ const Navbar = () => {
   const navItems = [
     { to: '/', label: 'Home', icon: Home, exact: true },
     { to: '/scan', label: 'Scan NFC', icon: Wifi },
-    { to: '/transaksi', label: 'Status Cucian', icon: History },
+    { to: '/histori', label: 'Histori Member', icon: History },
+    { to: '/transaksi', label: 'Status Cucian', icon: Clock },
     { to: '/members', label: 'Data Member', icon: Users },
-    { to: '/perpanjangan', label: 'Histori Pembelian Paket', icon: CreditCard },
+    { to: '/perpanjangan', label: 'Histori Isi Kuota', icon: CreditCard },
     { to: '/paket', label: 'Master Paket', icon: Package },
     ...(user?.role === 'SUPER_OWNER'
       ? [{ to: '/perusahaan', label: 'Kelola Outlet (SaaS)', icon: Building2 }]

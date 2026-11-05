@@ -29,6 +29,7 @@ import MobileTransaksiList from './pages/mobile/TransaksiList';
 import MobilePerpanjanganList from './pages/mobile/PerpanjanganList';
 import MobilePaketList from './pages/mobile/PaketList';
 import MobilePerusahaanList from './pages/mobile/PerusahaanList';
+import HistoriMember from './pages/HistoriMember';
 
 function AppRoutes() {
   const { isMobile } = useViewMode();
@@ -69,6 +70,7 @@ function AppRoutes() {
         <Route path="members/tambah" element={<MemberFormPage />} />
         <Route path="members/:id" element={<MemberDetailPage />} />
         <Route path="members/:id/edit" element={<MemberFormPage />} />
+        <Route path="histori" element={<HistoriMember />} />
         <Route path="transaksi" element={<TransaksiListPage />} />
         <Route path="perpanjangan" element={<PerpanjanganListPage />} />
         <Route path="paket" element={<PaketListPage />} />

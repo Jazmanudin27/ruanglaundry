@@ -129,6 +129,9 @@ const Dashboard = () => {
             <RotateCw size={11} className={refreshing ? "animate-spin" : ""} />{" "}
             Refresh
           </button>
+          <Link to="/histori" className="btn btn-outline">
+            <History size={11} /> Histori Member
+          </Link>
           <Link to="/members/tambah" className="btn btn-primary">
             Tambah Member
           </Link>

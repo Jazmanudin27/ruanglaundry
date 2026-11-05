@@ -83,7 +83,8 @@ const MobileLayout = () => {
   const navItems = [
     { to: '/', label: 'Beranda', icon: Home, exact: true },
     { to: '/scan', label: 'Scan NFC', icon: Wifi },
-    { to: '/transaksi', label: 'Cucian', icon: History },
+    { to: '/histori', label: 'Histori', icon: History },
+    { to: '/transaksi', label: 'Cucian', icon: Clock },
     { to: '/members', label: 'Member', icon: Users },
   ];
 
@@ -200,7 +201,7 @@ const MobileLayout = () => {
 
         {/* FLOATING DARK PILL BOTTOM NAVIGATION BAR */}
         <div className="fixed sm:sticky bottom-2.5 left-0 right-0 z-40 px-3 max-w-[430px] mx-auto w-full pointer-events-none">
-          <nav className="bg-gradient-to-r from-[#191e38] via-[#12162b] to-[#0d1121] p-1.5 rounded-[26px] shadow-[0_12px_30px_rgba(13,17,33,0.55)] border border-slate-700/80 grid grid-cols-4 items-center pointer-events-auto">
+          <nav className="bg-gradient-to-r from-[#191e38] via-[#12162b] to-[#0d1121] p-1.5 rounded-[26px] shadow-[0_12px_30px_rgba(13,17,33,0.55)] border border-slate-700/80 grid grid-cols-5 items-center pointer-events-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = item.exact

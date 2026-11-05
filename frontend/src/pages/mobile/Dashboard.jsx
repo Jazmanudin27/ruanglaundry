@@ -52,9 +52,16 @@ const Dashboard = () => {
       shadow: 'shadow-blue-500/30',
     },
     {
+      to: '/histori',
+      label: 'Histori',
+      icon: History,
+      gradient: 'from-[#8b5cf6] to-[#6d28d9]',
+      shadow: 'shadow-purple-500/30',
+    },
+    {
       to: '/transaksi',
       label: 'Cucian',
-      icon: History,
+      icon: Clock,
       gradient: 'from-[#f41f4e] to-[#d9113f]',
       shadow: 'shadow-rose-500/30',
     },
