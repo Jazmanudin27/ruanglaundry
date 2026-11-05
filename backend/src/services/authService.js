@@ -12,7 +12,21 @@ export const loginAdmin = async (username, password) => {
     throw new Error('Username atau password salah');
   }
 
-  const isPasswordValid = await bcrypt.compare(password, admin.passwordHash);
+  let isPasswordValid = false;
+  if (admin.passwordHash === password) {
+    isPasswordValid = true;
+    // Auto upgrade plain text to bcrypt hash
+    bcrypt.hash(password, 10).then((hashed) => {
+      prisma.admin.update({ where: { id: admin.id }, data: { passwordHash: hashed } }).catch(() => {});
+    });
+  } else {
+    try {
+      isPasswordValid = await bcrypt.compare(password, admin.passwordHash);
+    } catch {
+      isPasswordValid = false;
+    }
+  }
+
   if (!isPasswordValid) {
     throw new Error('Username atau password salah');
   }
