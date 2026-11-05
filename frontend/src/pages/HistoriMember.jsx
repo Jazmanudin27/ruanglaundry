@@ -1,26 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   History,
-  Search,
-  Users,
   Scale,
-  Calendar,
-  Clock,
-  Printer,
-  ChevronRight,
-  Package,
-  Phone,
   Wifi,
-  Sparkles,
-  ArrowUpDown,
-  Filter,
+  Package,
+  Printer,
+  Edit2,
+  ExternalLink,
+  AlertCircle,
   CheckCircle2,
-  FileSpreadsheet,
+  Search,
 } from 'lucide-react';
-import { memberApi, transaksiApi } from '../api';
-import { formatTanggal, formatTanggalWaktu } from '../utils/nfcHelper';
+import { memberApi, paketApi } from '../api';
+import KartuKuota from '../components/KartuKuota';
+import ModalScanKartu from '../components/ModalScanKartu';
 import ThermalReceipt from '../components/ThermalReceipt';
+import { formatTanggalWaktu, formatRupiah } from '../utils/nfcHelper';
 import showAlert from '../utils/sweetalert';
 
 export default function HistoriMember() {
@@ -30,80 +26,144 @@ export default function HistoriMember() {
   const [members, setMembers] = useState([]);
   const [selectedMemberId, setSelectedMemberId] = useState(searchParams.get('memberId') || '');
   const [selectedMember, setSelectedMember] = useState(null);
-  const [historyList, setHistoryList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [transaksiList, setTransaksiList] = useState([]);
+  const [pakets, setPakets] = useState([]);
+  const [loadingMembers, setLoadingMembers] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successPerpanjangMsg, setSuccessPerpanjangMsg] = useState('');
 
-  // Untuk cetak faktur thermal
+  // Tab aktif: 'riwayat' atau 'perpanjang'
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get('tab') === 'perpanjang' ? 'perpanjang' : 'riwayat'
+  );
+
+  // Form Perpanjang Paket
+  const [selectedPaketId, setSelectedPaketId] = useState('');
+  const [customHarga, setCustomHarga] = useState('');
+  const [submittingPerpanjang, setSubmittingPerpanjang] = useState(false);
+
+  // Modal Ganti Kartu NFC
+  const [isModalGantiOpen, setIsModalGantiOpen] = useState(false);
+
+  // Thermal print state
   const [printTransaksi, setPrintTransaksi] = useState(null);
 
-  // 1. Ambil daftar semua member untuk dropdown select
+  // 1. Ambil daftar member dan paket
   useEffect(() => {
-    const fetchAllMembers = async () => {
-      setLoading(true);
+    const initData = async () => {
+      setLoadingMembers(true);
       try {
-        const res = await memberApi.getAll({ limit: 200 });
-        if (res.success && res.data) {
-          const list = res.data.members || [];
+        const [resMembers, resPaket] = await Promise.all([
+          memberApi.getAll({ limit: 200 }),
+          paketApi.getAll(false),
+        ]);
+
+        if (resMembers.success && resMembers.data) {
+          const list = resMembers.data.members || [];
           setMembers(list);
 
-          // Jika ada query param memberId di URL, pilih langsung
           const paramId = searchParams.get('memberId');
           if (paramId) {
             setSelectedMemberId(paramId);
           } else if (list.length > 0 && !selectedMemberId) {
-            // Default pilih member pertama jika belum ada yang dipilih
             setSelectedMemberId(list[0].id);
           }
         }
+
+        if (resPaket.success) {
+          setPakets(resPaket.data || []);
+          if (resPaket.data && resPaket.data.length > 0) {
+            setSelectedPaketId(resPaket.data[0].id);
+          }
+        }
       } catch (err) {
-        console.error('Gagal memuat member:', err);
+        console.error('Gagal mengambil data awal:', err);
       } finally {
-        setLoading(false);
+        setLoadingMembers(false);
       }
     };
 
-    fetchAllMembers();
+    initData();
   }, []);
 
-  // 2. Setiap kali selectedMemberId berubah, load riwayat cuciannya
-  useEffect(() => {
-    if (!selectedMemberId) {
+  // 2. Ambil data member yang dipilih
+  const fetchMemberDetail = async (id) => {
+    if (!id) {
       setSelectedMember(null);
-      setHistoryList([]);
+      setTransaksiList([]);
       return;
     }
 
-    const loadMemberHistory = async () => {
-      setLoadingHistory(true);
-      try {
-        const [resMember, resHistory] = await Promise.all([
-          memberApi.getById(selectedMemberId),
-          memberApi.getTransaksi(selectedMemberId),
-        ]);
+    setLoadingDetail(true);
+    setErrorMsg('');
+    try {
+      const [resMember, resTransaksi] = await Promise.all([
+        memberApi.getById(id),
+        memberApi.getTransaksi(id),
+      ]);
 
-        if (resMember.success) {
-          setSelectedMember(resMember.data);
-        }
-
-        if (resHistory.success) {
-          setHistoryList(resHistory.data || []);
-        }
-      } catch (err) {
-        console.error('Gagal memuat riwayat:', err);
-        showAlert.error('Gagal', 'Tidak dapat mengambil riwayat pemakaian');
-      } finally {
-        setLoadingHistory(false);
+      if (resMember.success) {
+        setSelectedMember(resMember.data);
       }
-    };
+      if (resTransaksi.success) {
+        setTransaksiList(resTransaksi.data || []);
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Gagal memuat detail member');
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
 
-    loadMemberHistory();
+  useEffect(() => {
+    if (selectedMemberId) {
+      fetchMemberDetail(selectedMemberId);
+    }
   }, [selectedMemberId]);
 
   const handleSelectMember = (id) => {
     setSelectedMemberId(id);
     setSearchParams(id ? { memberId: id } : {});
+  };
+
+  const handlePerpanjangSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedMember) return;
+    setErrorMsg('');
+    setSuccessPerpanjangMsg('');
+    setSubmittingPerpanjang(true);
+
+    try {
+      const res = await memberApi.perpanjang(selectedMember.id, {
+        paketId: selectedPaketId,
+        hargaDibayar: customHarga ? parseInt(customHarga) : undefined,
+      });
+
+      if (res.success) {
+        showAlert.success('Berhasil!', 'Paket member berhasil diperpanjang');
+        setSuccessPerpanjangMsg('Paket member berhasil diperpanjang!');
+        fetchMemberDetail(selectedMember.id);
+        setActiveTab('riwayat');
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Gagal memperpanjang paket');
+      showAlert.error('Gagal Perpanjang', err.message);
+    } finally {
+      setSubmittingPerpanjang(false);
+    }
+  };
+
+  const handleGantiKartu = async (uidBaru) => {
+    if (!selectedMember) return;
+    try {
+      await memberApi.gantiKartu(selectedMember.id, uidBaru);
+      showAlert.success('Kartu Terhubung!', `Kartu member berhasil diganti ke UID: ${uidBaru}`);
+      setIsModalGantiOpen(false);
+      fetchMemberDetail(selectedMember.id);
+    } catch (err) {
+      showAlert.error('Gagal Mengganti Kartu', err.message);
+    }
   };
 
   const handlePrint = (transaksiItem) => {
@@ -113,266 +173,317 @@ export default function HistoriMember() {
     }, 200);
   };
 
-  // Filter daftar member di search jika user mencari di dropdown
-  const filteredMembers = members.filter((m) =>
-    m.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (m.noHp && m.noHp.includes(searchQuery))
-  );
-
-  // Statistik cucian member yang dipilih
-  const totalKgDicuci = historyList.reduce(
-    (acc, curr) => acc + parseFloat(curr.beratKg || 0),
-    0
-  );
+  const selectedPaketInfo = pakets.find((p) => p.id === selectedPaketId);
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto pb-16">
-      {/* 1. HEADER SECTION */}
-      <div className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 rounded-2xl p-4 sm:p-6 text-white shadow-lg">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-inner">
-              <History className="w-6 h-6 text-amber-300" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-black tracking-tight leading-tight">
-                Histori Pemakaian Member
-              </h1>
-              <p className="text-xs text-sky-100 mt-0.5">
-                Pilih member untuk melihat riwayat cucian & sisa kuota paket
-              </p>
-            </div>
+    <div className="space-y-3 w-full">
+      {/* 1. TOP BAR DENGAN SELECTOR MEMBER PERSIS GAYA DETAIL MEMBER */}
+      <div className="bg-[#0284c7] text-white rounded-lg p-3 sm:p-3.5 shadow-sm flex items-center justify-between flex-wrap gap-2.5 w-full">
+        <div className="flex items-center gap-2.5 flex-1 min-w-[200px]">
+          <div className="p-1.5 bg-white/10 rounded-md text-white">
+            <History className="w-4 h-4 text-amber-300" />
           </div>
-
-          {/* Quick Count Total Member */}
-          <div className="inline-flex items-center gap-2 bg-black/20 backdrop-blur-sm border border-white/20 rounded-xl px-3 py-1.5 self-start sm:self-auto text-xs">
-            <Users className="w-4 h-4 text-sky-300" />
-            <span className="font-bold">{members.length} Member Terdaftar</span>
+          <div>
+            <h1 className="text-sm sm:text-base font-extrabold tracking-tight leading-tight">
+              Histori Pemakaian Member
+            </h1>
+            <p className="text-[11px] text-sky-100 font-medium leading-tight">
+              Pilih member untuk lihat kuota aktif & riwayat transaksi cucian
+            </p>
           </div>
         </div>
 
-        {/* 2. SELECTOR PILIH MEMBER */}
-        <div className="mt-4 pt-4 border-t border-white/20">
-          <label className="block text-xs font-bold text-sky-100 mb-1.5 uppercase tracking-wider">
-            Pilih Nama Member:
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <div className="sm:col-span-2 relative">
-              <select
-                value={selectedMemberId}
-                onChange={(e) => handleSelectMember(e.target.value)}
-                className="w-full bg-white text-slate-800 font-extrabold text-sm rounded-xl px-3.5 py-2.5 shadow-md border-0 focus:ring-2 focus:ring-amber-300 transition"
-              >
-                <option value="">-- Pilih Member Laundry --</option>
-                {filteredMembers.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nama} — Sisa: {parseFloat(m.sisaKuota || 0).toFixed(1)} kg ({m.paket?.namaPaket || 'Paket'})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Quick Search Input */}
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari nama / no HP..."
-                className="w-full pl-9 pr-3 py-2.5 bg-white/90 focus:bg-white text-slate-800 placeholder-slate-400 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition"
-              />
-            </div>
-          </div>
+        {/* Dropdown Select Member */}
+        <div className="w-full sm:w-auto min-w-[260px]">
+          <select
+            value={selectedMemberId}
+            onChange={(e) => handleSelectMember(e.target.value)}
+            disabled={loadingMembers}
+            className="w-full bg-white text-slate-800 font-bold text-xs rounded-lg px-3 py-2 shadow-sm border-0 focus:outline-none focus:ring-2 focus:ring-amber-300"
+          >
+            <option value="">-- Pilih Member Laundry --</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.nama} — Sisa: {parseFloat(m.sisaKuota || 0).toFixed(1)} kg ({m.paket?.namaPaket || 'Paket'})
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* 3. KARTU INFORMASI MEMBER YANG DIPILIH */}
-      {selectedMember && (
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-md">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-700 border border-sky-200 font-black text-xl flex items-center justify-center shrink-0 shadow-sm">
-                {selectedMember.nama ? selectedMember.nama.charAt(0).toUpperCase() : 'M'}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-                    {selectedMember.nama}
-                  </h2>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800 border border-sky-200 uppercase">
-                    {selectedMember.paket?.namaPaket || 'Paket'}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-1">
-                  <span className="flex items-center gap-1">
-                    <Phone className="w-3.5 h-3.5 text-slate-400" />
-                    {selectedMember.noHp || '-'}
-                  </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1 font-mono text-[11px]">
-                    <Wifi className="w-3.5 h-3.5 text-slate-400" />
-                    {selectedMember.uidKartu || 'Belum pasang RFID'}
-                  </span>
-                </div>
-              </div>
-            </div>
+      {errorMsg && (
+        <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs font-semibold flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => navigate(`/scan?memberId=${selectedMember.id}`)}
-                className="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5"
+      {successPerpanjangMsg && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs font-semibold flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span>{successPerpanjangMsg}</span>
+        </div>
+      )}
+
+      {loadingDetail ? (
+        <div className="p-12 text-center text-slate-500 bg-white rounded-lg border border-slate-200">
+          <div className="inline-block w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-2" />
+          <p className="text-xs font-semibold">Memuat profil & riwayat member...</p>
+        </div>
+      ) : !selectedMember ? (
+        <div className="p-8 bg-white rounded-2xl text-center space-y-3 border border-slate-200">
+          <AlertCircle className="w-10 h-10 text-slate-400 mx-auto" />
+          <h3 className="text-base font-bold text-slate-800">Silakan Pilih Member</h3>
+          <p className="text-xs text-slate-500">
+            Pilih nama member dari dropdown di atas untuk melihat kartu kuota dan riwayat cucian.
+          </p>
+        </div>
+      ) : (
+        /* Grid 2 Kolom Layout Persis MemberDetail */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 w-full items-start">
+          {/* Kolom Kiri: Kartu Kuota & Ringkasan Info (lg:col-span-5) */}
+          <div className="lg:col-span-5 space-y-3">
+            {/* Visual Kartu Kuota RFID Holografik */}
+            <KartuKuota member={selectedMember} />
+
+            {/* Tombol Aksi Cepat */}
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                to={
+                  selectedMember.uidKartu
+                    ? `/scan?uid=${selectedMember.uidKartu}`
+                    : `/scan?memberId=${selectedMember.id}`
+                }
+                className="py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1.5 transition"
               >
                 <Scale className="w-3.5 h-3.5" />
-                <span>Input Timbangan Baru</span>
+                <span>Catat Laundry</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => setIsModalGantiOpen(true)}
+                className="py-2 px-3 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+              >
+                <Wifi className="w-3.5 h-3.5 text-sky-600" />
+                <span>Ganti Kartu</span>
               </button>
+            </div>
+
+            {/* Identitas Pemegang Kartu */}
+            <div className="bg-white rounded-lg p-3.5 border border-slate-200 shadow-sm space-y-2 text-xs">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                <span className="text-[10px] uppercase font-bold text-slate-400">
+                  Identitas Pemegang Kartu
+                </span>
+                <Link
+                  to={`/members/${selectedMember.id}`}
+                  className="text-[11px] text-sky-600 hover:text-sky-700 font-bold flex items-center gap-1"
+                >
+                  <span>Detail Penuh</span>
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+
+              <div className="flex justify-between py-1 border-b border-slate-50">
+                <span className="text-slate-500">Nama Pelanggan:</span>
+                <strong className="text-slate-800">{selectedMember.nama}</strong>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-50">
+                <span className="text-slate-500">No WhatsApp:</span>
+                <span className="font-semibold text-sky-700">{selectedMember.noHp || '-'}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-50">
+                <span className="text-slate-500">Nomor NFC UID:</span>
+                <span className="font-mono text-[11px] font-bold text-slate-700">
+                  {selectedMember.uidKartu || 'Tanpa Kartu Fisik'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-50">
+                <span className="text-slate-500">Paket Terdaftar:</span>
+                <span className="font-bold text-slate-800">
+                  {selectedMember.paket?.namaPaket || 'Paket Reguler'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-slate-500">Status Langganan:</span>
+                <span
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    selectedMember.status === 'AKTIF'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-rose-100 text-rose-800'
+                  }`}
+                >
+                  {selectedMember.status}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Grid Stat Kuota */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-4">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
-                Sisa Kuota
-              </span>
-              <div className="text-lg font-black text-emerald-600">
-                {parseFloat(selectedMember.sisaKuota || 0).toFixed(2)}{' '}
-                <span className="text-xs font-semibold text-slate-500">kg</span>
-              </div>
+          {/* Kolom Kanan: Tab Riwayat & Perpanjang (lg:col-span-7) */}
+          <div className="lg:col-span-7 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            {/* Header Tabs */}
+            <div className="flex border-b border-slate-200 bg-slate-50/70 p-1.5 gap-1.5">
+              <button
+                type="button"
+                onClick={() => setActiveTab('riwayat')}
+                className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition ${
+                  activeTab === 'riwayat'
+                    ? 'bg-sky-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-200/60'
+                }`}
+              >
+                <History className="w-3.5 h-3.5" />
+                <span>Riwayat Transaksi Cucian ({transaksiList.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('perpanjang')}
+                className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition ${
+                  activeTab === 'perpanjang'
+                    ? 'bg-sky-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-200/60'
+                }`}
+              >
+                <Package className="w-3.5 h-3.5" />
+                <span>Perpanjang / Isi Kuota</span>
+              </button>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
-                Kuota Awal Paket
-              </span>
-              <div className="text-lg font-black text-slate-800">
-                {parseFloat(selectedMember.kuotaAwal || 0).toFixed(1)}{' '}
-                <span className="text-xs font-semibold text-slate-500">kg</span>
-              </div>
-            </div>
+            {/* Konten Tab Riwayat */}
+            {activeTab === 'riwayat' ? (
+              <div className="divide-y divide-slate-100">
+                {transaksiList.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-400">
+                    <History className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                    <p>Belum ada riwayat transaksi cucian.</p>
+                  </div>
+                ) : (
+                  transaksiList.map((t) => (
+                    <div
+                      key={t.id}
+                      className="p-3.5 flex items-center justify-between text-xs hover:bg-slate-50 transition"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-800">
+                            {formatTanggalWaktu(t.createdAt)}
+                          </span>
+                          {t.rakPenyimpanan && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                              Rak: {t.rakPenyimpanan}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          {t.catatan || 'Cucian rutin'} • {t.admin?.nama || 'Kasir'}
+                        </div>
+                      </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
-                Total Cuci
-              </span>
-              <div className="text-lg font-black text-sky-700">
-                {historyList.length}{' '}
-                <span className="text-xs font-semibold text-slate-500">kali</span>
-              </div>
-            </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <span className="font-extrabold text-rose-600 text-sm block">
+                            -{parseFloat(t.beratKg).toFixed(2)} kg
+                          </span>
+                          <div className="text-[10px] text-emerald-600 font-bold">
+                            Sisa: {parseFloat(t.sisaSesudah).toFixed(2)} kg
+                          </div>
+                        </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">
-                Total Berat Dicuci
-              </span>
-              <div className="text-lg font-black text-indigo-700">
-                {totalKgDicuci.toFixed(2)}{' '}
-                <span className="text-xs font-semibold text-slate-500">kg</span>
+                        {/* Tombol Cetak Faktur Thermal 58mm */}
+                        <button
+                          type="button"
+                          onClick={() => handlePrint(t)}
+                          title="Cetak Faktur Thermal Basmalah Wash"
+                          className="p-2 bg-slate-100 hover:bg-sky-50 text-slate-600 hover:text-sky-600 rounded-lg border border-slate-200 transition"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-slate-700" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
-            </div>
+            ) : (
+              /* Konten Tab Perpanjang */
+              <form onSubmit={handlePerpanjangSubmit} className="p-4 space-y-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                    Pilih Paket Isi Ulang *
+                  </label>
+                  <select
+                    required
+                    value={selectedPaketId}
+                    onChange={(e) => setSelectedPaketId(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  >
+                    {pakets.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.namaPaket} — +{p.kuotaKg} kg, +{p.durasiHari} Hari ({formatRupiah(p.harga)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedPaketInfo && (
+                  <div className="p-3 bg-sky-50 border border-sky-200 rounded-lg text-xs space-y-1 text-sky-900">
+                    <div className="flex justify-between font-bold">
+                      <span>Tarif Paket:</span>
+                      <strong className="text-sky-800">
+                        {formatRupiah(selectedPaketInfo.harga)}
+                      </strong>
+                    </div>
+                    <div className="text-[11px]">
+                      Tambahan Kuota: <strong>+{selectedPaketInfo.kuotaKg} kg</strong> • Durasi: <strong>+{selectedPaketInfo.durasiHari} Hari</strong>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                    Nominal Dibayar (Opsional)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder={`Default: ${selectedPaketInfo ? selectedPaketInfo.harga : 0}`}
+                    value={customHarga}
+                    onChange={(e) => setCustomHarga(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Kosongkan jika nominal sesuai harga paket resmi di atas.
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={submittingPerpanjang}
+                    className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-lg shadow-sm transition disabled:opacity-50"
+                  >
+                    {submittingPerpanjang ? 'Memproses...' : 'Konfirmasi Isi Ulang / Perpanjang Kuota'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
 
-      {/* 4. DAFTAR RIWAYAT TRANSAKSI / PEMAKAIAN */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden">
-        <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-sky-600" />
-            <h3 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-wide">
-              Riwayat Transaksi & Timbangan ({historyList.length})
-            </h3>
-          </div>
-          {selectedMember && (
-            <span className="text-xs font-bold text-slate-500">
-              Member: <strong className="text-slate-800">{selectedMember.nama}</strong>
-            </span>
-          )}
-        </div>
+      {/* Modal Scan Kartu Ganti NFC */}
+      {selectedMember && (
+        <ModalScanKartu
+          isOpen={isModalGantiOpen}
+          onClose={() => setIsModalGantiOpen(false)}
+          onCardDetected={handleGantiKartu}
+          title={`Ganti Kartu: ${selectedMember.nama}`}
+          description="Tempelkan kartu RFID / NFC baru untuk dihubungkan ke member ini."
+        />
+      )}
 
-        {loadingHistory ? (
-          <div className="py-12 text-center text-xs text-slate-400">
-            <div className="inline-block w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mb-2" />
-            <p>Memuat riwayat pemakaian...</p>
-          </div>
-        ) : historyList.length === 0 ? (
-          <div className="py-12 text-center text-xs text-slate-400">
-            <History className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-            <p>Belum ada riwayat cucian untuk member ini.</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {historyList.map((t, idx) => {
-              const berat = parseFloat(t.beratKg || 0);
-              const sisaAwal = parseFloat(t.sisaSebelum || 0);
-              const sisaAkhir = parseFloat(t.sisaSesudah || 0);
-
-              return (
-                <div
-                  key={t.id || idx}
-                  className="p-3.5 sm:p-4 hover:bg-slate-50/80 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                >
-                  {/* Kolom Kiri: Waktu & Kasir */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-black text-slate-800">
-                        {formatTanggalWaktu(t.createdAt)}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                        {t.statusCucian || 'SELESAI'}
-                      </span>
-                      {t.rakPenyimpanan && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                          {t.rakPenyimpanan}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="text-xs text-slate-500 flex flex-wrap items-center gap-2">
-                      <span>Kasir: <strong className="text-slate-700">{t.admin?.nama || 'Kasir'}</strong></span>
-                      {t.catatan && (
-                        <>
-                          <span>•</span>
-                          <span className="italic text-slate-600 font-medium">"{t.catatan}"</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Kolom Kanan: Rincian Kuota & Tombol Cetak Faktur */}
-                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-                    <div className="text-left sm:text-right">
-                      <div className="text-sm font-black text-rose-600">
-                        -{berat.toFixed(2)} kg
-                      </div>
-                      <div className="text-[11px] text-slate-500">
-                        Sisa:{' '}
-                        <strong className="text-emerald-700 font-black">
-                          {sisaAkhir.toFixed(2)} kg
-                        </strong>
-                      </div>
-                    </div>
-
-                    {/* Tombol Cetak Struk Format Baru */}
-                    <button
-                      type="button"
-                      onClick={() => handlePrint(t)}
-                      className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 shrink-0"
-                      title="Cetak Faktur Thermal"
-                    >
-                      <Printer className="w-3.5 h-3.5 text-amber-300" />
-                      <span>Cetak Faktur</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* 5. HIDDEN PRINTABLE CONTAINER UNTUK CETAK FAKTUR */}
+      {/* Container Printable Faktur Thermal Basmalah Wash */}
       {printTransaksi && (
         <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none print:opacity-100 print:pointer-events-auto print:static print:visible">
           <ThermalReceipt
@@ -386,4 +497,3 @@ export default function HistoriMember() {
     </div>
   );
 }
-
