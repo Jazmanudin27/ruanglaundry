@@ -28,6 +28,7 @@ import {
 import { transaksiApi, memberApi } from "../../api";
 import { formatTanggal, formatTanggalWaktu } from "../../utils/nfcHelper";
 import showAlert from "../../utils/sweetalert";
+import ThermalReceipt from "../../components/ThermalReceipt";
 
 const TransaksiList = () => {
   const [transaksi, setTransaksi] = useState([]);
@@ -828,184 +829,14 @@ const TransaksiList = () => {
                 </div>
               </div>
 
-              {/* Printable Receipt Paper Style */}
-              <div
-                id="printable-receipt"
-                style={{
-                  padding: "14px",
-                  fontFamily: "monospace",
-                  fontSize: "0.74rem",
-                  color: "#0f172a",
-                  lineHeight: 1.4,
-                  background: "#ffffff",
-                  border: "1px dashed #cbd5e1",
-                  borderRadius: "8px",
-                }}
-              >
-                <div
-                  style={{
-                    textAlign: "center",
-                    borderBottom: "1px dashed #cbd5e1",
-                    paddingBottom: "8px",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>
-                    RUANG LAUNDRY EXPRESS
-                  </div>
-                  <div style={{ fontSize: "0.66rem", color: "#64748b" }}>
-                    Sistem Member Kartu NFC Outlet
-                  </div>
-                  <div style={{ fontSize: "0.64rem", color: "#64748b" }}>
-                    {formatTanggalWaktu(selectedTransaksi.createdAt)}
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: "8px", spaceY: "3px" }}>
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <span>Pelanggan:</span>
-                    <strong>
-                      {selectedTransaksi.member?.nama || selectedTransaksi.namaPelanggan || "Pelanggan"}
-                      {selectedTransaksi.jenisPelanggan === "NON_MEMBER" ? " (Non-Member)" : ""}
-                    </strong>
-                  </div>
-                  {selectedTransaksi.jenisPelanggan !== "NON_MEMBER" && (
-                    <div
-                      style={{ display: "flex", justifyContent: "space-between" }}
-                    >
-                      <span>UID Kartu:</span>
-                      <span>{selectedTransaksi.member?.uidKartu || "-"}</span>
-                    </div>
-                  )}
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <span>No. HP:</span>
-                    <span>{selectedTransaksi.member?.noHp || selectedTransaksi.noHpPelanggan || "-"}</span>
-                  </div>
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <span>Status Cucian:</span>
-                    <strong>{modalStatus}</strong>
-                  </div>
-                  {modalRak && (
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span>Posisi Rak:</span>
-                      <strong>{modalRak}</strong>
-                    </div>
-                  )}
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <span>Kasir:</span>
-                    <span>{selectedTransaksi.admin?.nama || "Admin"}</span>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    borderTop: "1px dashed #cbd5e1",
-                    borderBottom: "1px dashed #cbd5e1",
-                    padding: "6px 0",
-                    margin: "8px 0",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: "0.82rem",
-                      fontWeight: 800,
-                    }}
-                  >
-                    <span>Berat Cucian:</span>
-                    <span style={{ color: "#0284c7" }}>
-                      {parseFloat(selectedTransaksi.beratKg).toFixed(2)} kg
-                    </span>
-                  </div>
-
-                  {selectedTransaksi.jenisPelanggan === "NON_MEMBER" ? (
-                    <>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          marginTop: "3px",
-                        }}
-                      >
-                        <span>Tarif per Kg:</span>
-                        <span>Rp {(selectedTransaksi.tarifPerKg || 7000).toLocaleString('id-ID')}</span>
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          marginTop: "3px",
-                          fontWeight: 800,
-                        }}
-                      >
-                        <span>Total Bayar:</span>
-                        <strong style={{ color: "#059669" }}>
-                          Rp {(selectedTransaksi.totalBayar || 0).toLocaleString('id-ID')} ({selectedTransaksi.statusBayar || "LUNAS"})
-                        </strong>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          marginTop: "3px",
-                        }}
-                      >
-                        <span>Sisa Sebelum:</span>
-                        <span>
-                          {parseFloat(selectedTransaksi.sisaSebelum || 0).toFixed(2)} kg
-                        </span>
-                      </div>
-                      <div
-                        style={{ display: "flex", justifyContent: "space-between" }}
-                      >
-                        <span>Sisa Sesudah:</span>
-                        <strong style={{ color: "#059669" }}>
-                          {parseFloat(selectedTransaksi.sisaSesudah || 0).toFixed(2)} kg
-                        </strong>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {selectedTransaksi.catatan && (
-                  <div
-                    style={{
-                      fontSize: "0.68rem",
-                      color: "#475569",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    Catatan: {selectedTransaksi.catatan}
-                  </div>
-                )}
-
-                <div
-                  style={{
-                    textAlign: "center",
-                    fontSize: "0.64rem",
-                    color: "#94a3b8",
-                    marginTop: "10px",
-                  }}
-                >
-                  Terima kasih atas kunjungan Anda!
-                </div>
+              {/* Printable Thermal Receipt Style */}
+              <div className="flex justify-center bg-slate-100 p-3 rounded-xl border border-slate-200 overflow-x-auto">
+                <ThermalReceipt
+                  transaksi={selectedTransaksi}
+                  member={selectedTransaksi.member}
+                  kasirNama={selectedTransaksi.admin?.nama || "Admin"}
+                  perusahaanNoHp="0812 1404 6587"
+                />
               </div>
             </div>
 

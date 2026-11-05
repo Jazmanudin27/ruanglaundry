@@ -15,10 +15,12 @@ import {
   Check,
   MapPin,
   ArrowRight,
+  Printer,
 } from 'lucide-react';
 import { transaksiApi } from '../../api';
 import { formatTanggalWaktu } from '../../utils/nfcHelper';
 import showAlert from '../../utils/sweetalert';
+import ThermalReceipt from '../../components/ThermalReceipt';
 
 const TransaksiList = () => {
   const [transaksi, setTransaksi] = useState([]);
@@ -486,16 +488,39 @@ const TransaksiList = () => {
                 </div>
               </div>
 
-              <button
-                type="button"
-                disabled={savingStatus}
-                onClick={handleSimpanStatusModal}
-                className="w-full py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-extrabold shadow-md transition"
-              >
-                {savingStatus ? 'Menyimpan...' : 'Simpan Perubahan'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={savingStatus}
+                  onClick={handleSimpanStatusModal}
+                  className="flex-1 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-extrabold shadow-md transition"
+                >
+                  {savingStatus ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="py-2.5 px-3.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5"
+                  title="Cetak Struk Thermal"
+                >
+                  <Printer className="w-4 h-4 text-amber-300" />
+                  <span>Cetak Struk</span>
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Area Cetak Thermal Print di Mobile */}
+      {selectedTransaksi && (
+        <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none print:opacity-100 print:pointer-events-auto print:static print:visible">
+          <ThermalReceipt
+            transaksi={selectedTransaksi}
+            member={selectedTransaksi.member}
+            kasirNama={selectedTransaksi.admin?.nama || "Kasir"}
+            perusahaanNoHp="0812 1404 6587"
+          />
         </div>
       )}
     </div>

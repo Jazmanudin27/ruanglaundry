@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import NfcScanner from "../../components/NfcScanner";
 import KartuKuota from "../../components/KartuKuota";
+import ThermalReceipt from "../../components/ThermalReceipt";
 import { memberApi, transaksiApi } from "../../api";
 import { formatTanggalWaktu, formatRupiah } from "../../utils/nfcHelper";
 import { useAuth } from "../../context/AuthContext";
@@ -841,123 +842,12 @@ const ScanMember = () => {
       {/* AREA CETAK STRUK / FAKTUR THERMAL (58mm / 80mm) */}
       {transaksiSuccess && (
         <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none print:opacity-100 print:pointer-events-auto print:static print:visible">
-          <div
-            id="printable-thermal-receipt"
-            className="bg-white p-3.5 border border-dashed border-slate-300 rounded-xl font-mono text-[11px] text-slate-900 leading-tight space-y-2 select-text"
-          >
-            <div className="text-center pb-2 border-b border-dashed border-slate-300 space-y-0.5">
-              <div className="font-black text-sm text-slate-950 uppercase tracking-wider">
-                BASMALAH WASH
-              </div>
-              <div className="text-[10px] text-slate-500">
-                Sistem Laundry Syariah & Modern
-              </div>
-              <div className="text-[9px] text-slate-400">
-                {formatTanggalWaktu(transaksiSuccess.transaksi.createdAt)}
-              </div>
-            </div>
-
-            <div className="space-y-1 text-[10px] py-1 border-b border-dashed border-slate-300">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Pelanggan:</span>
-                <strong className="text-slate-900 truncate max-w-[170px]">
-                  {transaksiSuccess.isNonMember
-                    ? transaksiSuccess.transaksi.namaPelanggan
-                    : (member?.nama || transaksiSuccess.transaksi.member?.nama || "Member")}
-                </strong>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-slate-500">Kategori:</span>
-                <strong className="text-slate-800">
-                  {transaksiSuccess.isNonMember
-                    ? "Non-Member (Kiloan)"
-                    : `Member (${member?.paket?.namaPaket || "Paket"})`}
-                </strong>
-              </div>
-
-              {transaksiSuccess.transaksi.rakPenyimpanan && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Posisi Rak:</span>
-                  <strong className="text-slate-900">
-                    {transaksiSuccess.transaksi.rakPenyimpanan}
-                  </strong>
-                </div>
-              )}
-
-              <div className="flex justify-between">
-                <span className="text-slate-500">Kasir:</span>
-                <span className="text-slate-700">
-                  {user?.nama || "Admin Basmalah Wash"}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-1 py-1.5 border-b border-dashed border-slate-300">
-              <div className="flex justify-between text-xs font-black">
-                <span>Berat Cucian:</span>
-                <span className="text-sky-700">
-                  {parseFloat(transaksiSuccess.transaksi.beratKg).toFixed(2)} kg
-                </span>
-              </div>
-
-              {!transaksiSuccess.isNonMember ? (
-                <>
-                  <div className="flex justify-between text-[10px] text-slate-500">
-                    <span>Sisa Kuota Awal:</span>
-                    <span>
-                      {parseFloat(transaksiSuccess.transaksi.sisaSebelum).toFixed(2)} kg
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-[11px] font-bold text-emerald-700">
-                    <span>Sisa Kuota Baru:</span>
-                    <span>{transaksiSuccess.sisaKuotaBaru} kg</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex justify-between text-[10px] text-slate-500">
-                    <span>Tarif per Kg:</span>
-                    <span>
-                      {formatRupiah(transaksiSuccess.transaksi.tarifPerKg || 7000)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs font-black text-emerald-800 pt-0.5">
-                    <span>TOTAL BAYAR:</span>
-                    <span>
-                      {formatRupiah(transaksiSuccess.transaksi.totalBayar)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-[10px] font-bold">
-                    <span>Status Pembayaran:</span>
-                    <span
-                      className={
-                        transaksiSuccess.transaksi.statusBayar === "LUNAS"
-                          ? "text-emerald-700"
-                          : "text-rose-600"
-                      }
-                    >
-                      {transaksiSuccess.transaksi.statusBayar === "LUNAS"
-                        ? "LUNAS"
-                        : "BELUM BAYAR"}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {transaksiSuccess.transaksi.catatan && (
-              <div className="text-[10px] text-slate-600 py-1 border-b border-dashed border-slate-300">
-                <span className="text-slate-400">Catatan:</span>{" "}
-                <span>{transaksiSuccess.transaksi.catatan}</span>
-              </div>
-            )}
-
-            <div className="text-center pt-1.5 text-[9px] text-slate-400 space-y-0.5">
-              <div>* Simpan struk ini saat pengambilan *</div>
-              <div>Terima kasih atas kepercayaan Anda! 🙏</div>
-            </div>
-          </div>
+          <ThermalReceipt
+            transaksi={transaksiSuccess.transaksi}
+            member={member || transaksiSuccess.transaksi.member}
+            kasirNama={user?.nama || "Admin Basmalah Wash"}
+            perusahaanNoHp="0812 1404 6587"
+          />
         </div>
       )}
     </div>
