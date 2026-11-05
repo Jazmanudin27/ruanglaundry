@@ -53,6 +53,7 @@ const ModalScanKartu = ({ isOpen, onClose, onSelectUid, currentUid = '' }) => {
             onScan={handleScanSuccess}
             title="Tempelkan Kartu Baru"
             placeholder="Dekatkan kartu ke NFC Reader..."
+            defaultMobileMode={true}
           />
 
           {scannedUid && (

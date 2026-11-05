@@ -53,6 +53,13 @@ const NfcScanner = ({
     }
   }, [activeTab]);
 
+  // Otomatis aktifkan Web NFC jika di tab webnfc
+  useEffect(() => {
+    if (activeTab === 'webnfc' && isWebNfcSupported() && window.isSecureContext) {
+      startWebNfc();
+    }
+  }, [activeTab]);
+
   // Cleanup saat unmount
   useEffect(() => {
     return () => {
@@ -279,29 +286,34 @@ const NfcScanner = ({
               </h4>
               <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
                 {statusMessage ||
-                  (hasWebNfc
-                    ? 'Tempelkan kartu NFC member ke bagian belakang ponsel Android Anda.'
-                    : 'Web NFC butuh Chrome Android & koneksi HTTPS.')}
+                  (nfcStatus === 'scanning'
+                    ? 'Sekarang tempelkan kartu NFC ke bagian belakang HP Anda.'
+                    : 'Klik tombol biru "Mulai Scan" di bawah terlebih dahulu, lalu tempel kartu.')}
               </p>
             </div>
 
-            <div className="pt-1 flex justify-center gap-2">
+            <div className="pt-1 flex flex-col items-center justify-center gap-2">
               {nfcStatus !== 'scanning' ? (
-                <button
-                  type="button"
-                  onClick={startWebNfc}
-                  className="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5 transition"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Mulai Scan Web NFC
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={startWebNfc}
+                    className="w-full sm:w-auto px-5 py-3 bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-xs font-black rounded-xl shadow-md flex items-center justify-center gap-2 transition animate-bounce"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    <span>Klik Mulai Scan Web NFC</span>
+                  </button>
+                  <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 max-w-xs">
+                    ⚠️ <strong>PENTING:</strong> Klik tombol ini dulu (izinkan di Chrome) sebelum menempelkan kartu, agar tidak membuka DANA / Dompet Android.
+                  </p>
+                </>
               ) : (
                 <button
                   type="button"
                   onClick={stopWebNfc}
                   className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition"
                 >
-                  Berhenti
+                  Berhenti Scan
                 </button>
               )}
             </div>

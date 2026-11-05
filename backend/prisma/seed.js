@@ -136,142 +136,47 @@ async function main() {
     },
   });
 
-  // 4. Buat Member Contoh untuk Basmalah Wash
-  // Member 1: Baru mendaftar (belum cuci pertama, masa aktif belum berjalan)
-  const m1 = await prisma.member.create({
-    data: {
-      nama: 'Salmah Khairani Nasution',
-      noHp: '081234567890',
-      uidKartu: '04A1B2C3D4E5F6',
-      paketId: paketBasic.id,
-      kuotaAwal: 15.0,
-      sisaKuota: 15.0,
-      tglMulai: null,
-      tglBerakhir: null,
-      status: 'AKTIF',
-      perusahaanId: p1.id,
-    },
-  });
+  // 4. Buat 16 Member Resmi Basmalah Wash
+  const memberData = [
+    { no: 1, nama: 'Adinda', paketId: paketPremium.id, sisaKuota: 30.77, kuotaAwal: 30.77, berakhir: '2026-12-02' },
+    { no: 2, nama: 'Alvin Prasetya', paketId: paketReguler.id, sisaKuota: 23.41, kuotaAwal: 25.0, berakhir: '2026-11-22' },
+    { no: 3, nama: 'Alifa', paketId: paketPremium.id, sisaKuota: 26.11, kuotaAwal: 30.0, berakhir: '2026-11-23' },
+    { no: 4, nama: 'Ayla Nurita', paketId: paketBasic.id, sisaKuota: 12.83, kuotaAwal: 15.0, berakhir: '2026-11-30' },
+    { no: 5, nama: 'Dinar Fadilah', paketId: paketReguler.id, sisaKuota: 21.45, kuotaAwal: 25.0, berakhir: '2026-12-02' },
+    { no: 6, nama: 'Dira Nurazmi', paketId: paketPremium.id, sisaKuota: 32.84, kuotaAwal: 32.84, berakhir: '2026-11-27' },
+    { no: 7, nama: 'Fathir', paketId: paketReguler.id, sisaKuota: 23.19, kuotaAwal: 25.0, berakhir: '2026-11-30' },
+    { no: 8, nama: 'Hasbina', paketId: paketReguler.id, sisaKuota: 22.22, kuotaAwal: 25.0, berakhir: '2026-12-02' },
+    { no: 9, nama: 'Kayla Nazila Rahma', paketId: paketPremium.id, sisaKuota: 33.14, kuotaAwal: 33.14, berakhir: '2026-11-30' },
+    { no: 10, nama: 'Lulu Maklumi', paketId: paketBasic.id, sisaKuota: 8.84, kuotaAwal: 15.0, berakhir: '2026-11-07' },
+    { no: 11, nama: 'Lena Rahmawati', paketId: paketBasic.id, sisaKuota: 12.11, kuotaAwal: 15.0, berakhir: '2026-11-30' },
+    { no: 12, nama: 'Liana Jahira', paketId: paketPremium.id, sisaKuota: 15.93, kuotaAwal: 30.0, berakhir: '2026-11-20' },
+    { no: 13, nama: 'Ibran Mahardika', paketId: paketPremium.id, sisaKuota: 23.00, kuotaAwal: 30.0, berakhir: '2026-11-27' },
+    { no: 14, nama: 'Naila Fatimah Az-Zahra', paketId: paketReguler.id, sisaKuota: 21.20, kuotaAwal: 25.0, berakhir: '2026-12-04' },
+    { no: 15, nama: 'Novianti Kartika', paketId: paketPremium.id, sisaKuota: 32.13, kuotaAwal: 32.13, berakhir: '2026-12-02' },
+    { no: 16, nama: 'Ufairah Nur Sharifah', paketId: paketReguler.id, sisaKuota: 8.70, kuotaAwal: 25.0, berakhir: '2026-11-27' },
+  ];
 
-  // Member 2: Paket Reguler 25 kg, sudah cuci (Aktif Hijau, sisa 20 hari)
-  const m2 = await prisma.member.create({
-    data: {
-      nama: 'Budi Santoso',
-      noHp: '085712349988',
-      uidKartu: 'E2806894000050',
-      paketId: paketReguler.id,
-      kuotaAwal: 25.0,
-      sisaKuota: 20.0,
-      tglMulai: addDays(now, -10),
-      tglBerakhir: addDays(now, 20),
-      status: 'AKTIF',
-      perusahaanId: p1.id,
-    },
-  });
+  for (const m of memberData) {
+    const tglBerakhir = new Date(`${m.berakhir}T23:59:59`);
+    const tglMulai = new Date(tglBerakhir.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const noHp = `08${Math.floor(1000000000 + Math.random() * 9000000000)}`;
 
-  // Member 3: Indikator KUNING (Tersisa 4 hari)
-  const m3 = await prisma.member.create({
-    data: {
-      nama: 'Siti Rahmawati',
-      noHp: '081399887766',
-      uidKartu: '04556677889900',
-      paketId: paketPremium.id,
-      kuotaAwal: 30.0,
-      sisaKuota: 12.0,
-      tglMulai: addDays(now, -26),
-      tglBerakhir: addDays(now, 4), // Kuning: 3-5 hari
-      status: 'AKTIF',
-      perusahaanId: p1.id,
-    },
-  });
-
-  // Member 4: Indikator MERAH (Tersisa 1 hari)
-  const m4 = await prisma.member.create({
-    data: {
-      nama: 'Ahmad Fauzi',
-      noHp: '082188776655',
-      uidKartu: 'A1B2C3D4001122',
-      paketId: paketBasic.id,
-      kuotaAwal: 15.0,
-      sisaKuota: 3.5,
-      tglMulai: addDays(now, -29),
-      tglBerakhir: addDays(now, 1), // Merah: 1 hari
-      status: 'AKTIF',
-      perusahaanId: p1.id,
-    },
-  });
-
-  // Member 5: Indikator MERAH (Expired / 0 hari)
-  const m5 = await prisma.member.create({
-    data: {
-      nama: 'Dewi Lestari',
-      noHp: '087811223344',
-      uidKartu: null,
-      paketId: paketReguler.id,
-      kuotaAwal: 25.0,
-      sisaKuota: 0.0,
-      tglMulai: addDays(now, -35),
-      tglBerakhir: addDays(now, -5), // Merah: expired
-      status: 'AKTIF',
-      perusahaanId: p1.id,
-    },
-  });
-
-  // 5. Buat Riwayat Transaksi Cucian Contoh
-  await prisma.transaksi.create({
-    data: {
-      memberId: m2.id,
-      beratKg: 5.0,
-      sisaSebelum: 25.0,
-      sisaSesudah: 20.0,
-      catatan: 'Cuci kemeja & sprei',
-      adminId: admin1.id,
-      perusahaanId: p1.id,
-      createdAt: addDays(now, -10),
-    },
-  });
-
-  // 6. Buat Riwayat Pembelian / Perpanjangan Paket (Histori Pembelian)
-  await prisma.perpanjangan.create({
-    data: {
-      memberId: m2.id,
-      paketId: paketReguler.id,
-      tglMulai: addDays(now, -10),
-      tglBerakhir: addDays(now, 20),
-      hargaDibayar: 160000,
-      adminId: admin1.id,
-      perusahaanId: p1.id,
-      createdAt: addDays(now, -10),
-    },
-  });
-
-  await prisma.perpanjangan.create({
-    data: {
-      memberId: m3.id,
-      paketId: paketPremium.id,
-      tglMulai: addDays(now, -26),
-      tglBerakhir: addDays(now, 4),
-      hargaDibayar: 200000,
-      adminId: admin1.id,
-      perusahaanId: p1.id,
-      createdAt: addDays(now, -26),
-    },
-  });
-
-  await prisma.perpanjangan.create({
-    data: {
-      memberId: m4.id,
-      paketId: paketBasic.id,
-      tglMulai: addDays(now, -29),
-      tglBerakhir: addDays(now, 1),
-      hargaDibayar: 100000,
-      adminId: admin1.id,
-      perusahaanId: p1.id,
-      createdAt: addDays(now, -29),
-    },
-  });
-
-  console.log('Riwayat Pembelian & Perpanjangan Paket Berhasil Dibuat');
+    await prisma.member.create({
+      data: {
+        nama: m.nama,
+        noHp,
+        uidKartu: null,
+        paketId: m.paketId,
+        kuotaAwal: m.kuotaAwal,
+        sisaKuota: m.sisaKuota,
+        tglMulai,
+        tglBerakhir,
+        status: 'AKTIF',
+        perusahaanId: p1.id,
+      },
+    });
+  }
+  console.log('16 Member Resmi Basmalah Wash Berhasil Dibuat');
   console.log('--- Selesai Seeding Data Multi-Tenant ---');
 }
 
