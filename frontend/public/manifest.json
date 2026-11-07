@@ -1,0 +1,26 @@
+{
+  "short_name": "BWL",
+  "name": "Basmalah Wash Laundry",
+  "description": "Sistem Kasir & Member Laundry RFID Basmalah Wash (BWL)",
+  "icons": [
+    {
+      "src": "/logo-bwl.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512 any",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "128x128 96x96 48x48",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#0284c7",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity", "utilities"]
+}
+

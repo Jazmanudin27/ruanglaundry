@@ -30,6 +30,7 @@ import MobilePerpanjanganList from './pages/mobile/PerpanjanganList';
 import MobilePaketList from './pages/mobile/PaketList';
 import MobilePerusahaanList from './pages/mobile/PerusahaanList';
 import HistoriMember from './pages/HistoriMember';
+import ModalInstallPwa from './components/ModalInstallPwa';
 
 function AppRoutes() {
   const { isMobile } = useViewMode();
@@ -89,6 +90,7 @@ function App() {
       <ViewModeProvider>
         <BrowserRouter>
           <AppRoutes />
+          <ModalInstallPwa />
         </BrowserRouter>
       </ViewModeProvider>
     </AuthProvider>

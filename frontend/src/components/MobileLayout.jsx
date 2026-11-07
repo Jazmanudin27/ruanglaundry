@@ -22,6 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import { useViewMode } from '../context/ViewModeContext';
 import showAlert from '../utils/sweetalert';
 import ModalPengaturanAkun from './ModalPengaturanAkun';
+import BwlLogo from './BwlLogo';
 
 const MobileLayout = () => {
   const { user, logout } = useAuth();
@@ -98,11 +99,11 @@ const MobileLayout = () => {
           <div className="flex items-center justify-between mb-3.5">
             <NavLink
               to="/"
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 shadow-sm"
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 shadow-sm"
             >
-              <Layers className="w-3.5 h-3.5 text-sky-200" />
-              <span className="text-xs font-extrabold tracking-wide text-white">
-                Basmalah Wash
+              <BwlLogo size={24} />
+              <span className="text-xs font-black tracking-wide text-white">
+                BWL Basmalah Wash
               </span>
             </NavLink>
 

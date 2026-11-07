@@ -10,6 +10,7 @@ import {
   Search,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import BwlLogo from '../../components/BwlLogo';
 
 const Login = () => {
   const [username, setUsername] = useState('admin');
@@ -37,11 +38,9 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-[#0f172a] flex flex-col justify-between p-5 max-w-md mx-auto text-white">
       {/* Top Brand */}
-      <div className="pt-8 text-center space-y-2">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 to-cyan-400 flex items-center justify-center mx-auto shadow-lg shadow-sky-500/30">
-          <Layers className="w-7 h-7 text-white" />
-        </div>
-        <h1 className="text-xl font-black tracking-wide">BASMALAH WASH</h1>
+      <div className="pt-6 text-center space-y-2">
+        <BwlLogo size={68} className="mx-auto" />
+        <h1 className="text-xl font-black tracking-wide text-white">BASMALAH WASH</h1>
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/15 border border-sky-400/30 text-sky-300 text-[11px] font-bold">
           <Wifi className="w-3.5 h-3.5" />
           <span>Kasir Mobile & Sistem Member RFID</span>

@@ -22,6 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import { useViewMode } from '../context/ViewModeContext';
 import showAlert from '../utils/sweetalert';
 import ModalPengaturanAkun from './ModalPengaturanAkun';
+import BwlLogo from './BwlLogo';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -70,15 +71,13 @@ const Navbar = () => {
           {/* Logo & Brand */}
           <div className="flex items-center gap-2.5">
             <NavLink to="/" className="flex items-center gap-2 group">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-sky-500 to-cyan-400 flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition">
-                <Layers className="w-4 h-4" />
-              </div>
+              <BwlLogo size={34} className="group-hover:scale-105 transition" />
               <div className="flex flex-col">
                 <span className="font-extrabold text-sm tracking-wide text-white leading-tight">
                   BASMALAH WASH
                 </span>
-                <span className="text-[9px] text-slate-400 font-semibold tracking-wider uppercase leading-none">
-                  Sistem Member RFID
+                <span className="text-[9px] text-sky-400 font-semibold tracking-wider uppercase leading-none">
+                  BWL Member RFID
                 </span>
               </div>
             </NavLink>

@@ -9,6 +9,7 @@ import {
   Wifi,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import BwlLogo from "../../components/BwlLogo";
 
 const Login = () => {
   const [username, setUsername] = useState("admin");
@@ -38,9 +39,7 @@ const Login = () => {
       <div className="max-w-md w-full">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-500 to-cyan-400 text-white shadow-xl shadow-sky-500/20 mb-3">
-            <Layers className="w-9 h-9" />
-          </div>
+          <BwlLogo size={80} className="mx-auto mb-3" />
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
             BASMALAH WASH
           </h1>

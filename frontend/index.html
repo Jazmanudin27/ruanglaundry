@@ -2,13 +2,33 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230284c7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'/></svg>" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Basmalah Wash - Sistem Member RFID Laundry</title>
-    <meta name="description" content="Sistem Member Laundry Basmalah Wash Berbasis Kartu RFID. Tap kartu, input berat cucian, kuota berkurang otomatis." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>BWL - Basmalah Wash Laundry (Sistem RFID)</title>
+    <meta name="description" content="Aplikasi Kasir & Sistem Member Laundry RFID Basmalah Wash Laundry (BWL)." />
+
+    <!-- PWA Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0284c7" />
+
+    <!-- iOS Apple Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BWL Laundry" />
+    <link rel="apple-touch-icon" href="/logo-bwl.svg" />
   </head>
   <body class="bg-slate-100 text-slate-800 antialiased selection:bg-sky-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Daftarkan Service Worker untuk PWA
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.log('SW registration note:', err.message);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
