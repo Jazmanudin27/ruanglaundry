@@ -17,6 +17,7 @@ import DesktopTransaksiList from './pages/desktop/TransaksiList';
 import DesktopPerpanjanganList from './pages/desktop/PerpanjanganList';
 import DesktopPaketList from './pages/desktop/PaketList';
 import DesktopPerusahaanList from './pages/desktop/PerusahaanList';
+import DesktopHistoriMember from './pages/desktop/HistoriMember';
 
 // Mobile Pages
 import MobileLogin from './pages/mobile/Login';
@@ -29,7 +30,7 @@ import MobileTransaksiList from './pages/mobile/TransaksiList';
 import MobilePerpanjanganList from './pages/mobile/PerpanjanganList';
 import MobilePaketList from './pages/mobile/PaketList';
 import MobilePerusahaanList from './pages/mobile/PerusahaanList';
-import HistoriMember from './pages/HistoriMember';
+import MobileHistoriMember from './pages/mobile/HistoriMember';
 import ModalInstallPwa from './components/ModalInstallPwa';
 
 function AppRoutes() {
@@ -50,6 +51,9 @@ function AppRoutes() {
   const PerusahaanListPage = isMobile
     ? MobilePerusahaanList
     : DesktopPerusahaanList;
+  const HistoriMemberPage = isMobile
+    ? MobileHistoriMember
+    : DesktopHistoriMember;
 
   return (
     <Routes>
@@ -71,7 +75,7 @@ function AppRoutes() {
         <Route path="members/tambah" element={<MemberFormPage />} />
         <Route path="members/:id" element={<MemberDetailPage />} />
         <Route path="members/:id/edit" element={<MemberFormPage />} />
-        <Route path="histori" element={<HistoriMember />} />
+        <Route path="histori" element={<HistoriMemberPage />} />
         <Route path="transaksi" element={<TransaksiListPage />} />
         <Route path="perpanjangan" element={<PerpanjanganListPage />} />
         <Route path="paket" element={<PaketListPage />} />
