@@ -121,6 +121,16 @@ export default function DesktopHistoriMember() {
     setSearchParams(id ? { memberId: id } : {});
   };
 
+  const handleCustomHargaChange = (e) => {
+    const rawVal = e.target.value.replace(/\D/g, '');
+    if (!rawVal) {
+      setCustomHarga('');
+      return;
+    }
+    const formatted = new Intl.NumberFormat('id-ID').format(rawVal);
+    setCustomHarga(formatted);
+  };
+
   const handlePerpanjangSubmit = async (e) => {
     e.preventDefault();
     if (!selectedMember) return;
@@ -129,9 +139,10 @@ export default function DesktopHistoriMember() {
     setSubmittingPerpanjang(true);
 
     try {
+      const cleanHarga = customHarga ? parseInt(customHarga.replace(/\D/g, ''), 10) : undefined;
       const res = await memberApi.perpanjang(selectedMember.id, {
         paketId: selectedPaketId,
-        hargaDibayar: customHarga ? parseInt(customHarga) : undefined,
+        hargaDibayar: cleanHarga,
       });
 
       if (res.success) {
@@ -437,14 +448,22 @@ export default function DesktopHistoriMember() {
                   <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
                     Nominal Dibayar (Opsional)
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder={`Default: ${selectedPaketInfo ? selectedPaketInfo.harga : 0}`}
-                    value={customHarga}
-                    onChange={(e) => setCustomHarga(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">
+                      Rp
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder={`Default: ${selectedPaketInfo ? new Intl.NumberFormat('id-ID').format(selectedPaketInfo.harga) : 0}`}
+                      value={customHarga}
+                      onChange={handleCustomHargaChange}
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Kosongkan jika nominal sesuai harga resmi di atas.
+                  </p>
                 </div>
 
                 <div className="pt-2">

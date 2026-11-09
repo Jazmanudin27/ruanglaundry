@@ -140,6 +140,16 @@ export default function MobileHistoriMember() {
     setIsSearchOpen(false);
   };
 
+  const handleCustomHargaChange = (e) => {
+    const rawVal = e.target.value.replace(/\D/g, '');
+    if (!rawVal) {
+      setCustomHarga('');
+      return;
+    }
+    const formatted = new Intl.NumberFormat('id-ID').format(rawVal);
+    setCustomHarga(formatted);
+  };
+
   const handlePerpanjangSubmit = async (e) => {
     e.preventDefault();
     if (!selectedMember) return;
@@ -148,9 +158,10 @@ export default function MobileHistoriMember() {
     setSubmittingPerpanjang(true);
 
     try {
+      const cleanHarga = customHarga ? parseInt(customHarga.replace(/\D/g, ''), 10) : undefined;
       const res = await memberApi.perpanjang(selectedMember.id, {
         paketId: selectedPaketId,
-        hargaDibayar: customHarga ? parseInt(customHarga) : undefined,
+        hargaDibayar: cleanHarga,
       });
 
       if (res.success) {
@@ -309,26 +320,18 @@ export default function MobileHistoriMember() {
             <KartuKuota member={selectedMember} />
           </div>
 
-          {/* 3. TOMBOL AKSI CEPAT (ELEGANT BUTTONS) */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* 3. TOMBOL AKSI CEPAT (FULL WIDTH) */}
+          <div>
             <Link
               to={
                 selectedMember.uidKartu
                   ? `/scan?uid=${selectedMember.uidKartu}`
                   : `/scan?memberId=${selectedMember.id}`
               }
-              className="py-2.5 px-3 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md shadow-sky-500/20 active:scale-[0.98] transition"
+              className="w-full py-2.5 px-3 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-md shadow-sky-500/20 active:scale-[0.98] transition"
             >
-              <Scale className="w-3.5 h-3.5 text-amber-300" />
-              <span>Catat Timbangan</span>
-            </Link>
-
-            <Link
-              to={`/members/${selectedMember.id}`}
-              className="py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] transition"
-            >
-              <User className="w-3.5 h-3.5 text-sky-600" />
-              <span>Detail Penuh</span>
+              <Scale className="w-4 h-4 text-amber-300" />
+              <span>Catat Timbangan Cucian</span>
             </Link>
           </div>
 
@@ -485,14 +488,19 @@ export default function MobileHistoriMember() {
                   <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
                     Nominal Dibayar (Opsional)
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder={`Default: ${selectedPaketInfo ? selectedPaketInfo.harga : 0}`}
-                    value={customHarga}
-                    onChange={(e) => setCustomHarga(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-2.5 text-xs font-extrabold text-slate-400">
+                      Rp
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder={`Default: ${selectedPaketInfo ? new Intl.NumberFormat('id-ID').format(selectedPaketInfo.harga) : 0}`}
+                      value={customHarga}
+                      onChange={handleCustomHargaChange}
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-extrabold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    />
+                  </div>
                   <p className="text-[10px] text-slate-400 mt-1">
                     Kosongkan jika nominal sama dengan harga paket resmi di atas.
                   </p>

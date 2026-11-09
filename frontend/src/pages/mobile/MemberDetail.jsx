@@ -77,9 +77,10 @@ const MemberDetail = () => {
     setSubmittingPerpanjang(true);
 
     try {
+      const cleanHarga = customHarga ? parseInt(customHarga.replace(/\D/g, ''), 10) : undefined;
       const res = await memberApi.perpanjang(id, {
         paketId: selectedPaketId,
-        hargaDibayar: customHarga ? parseInt(customHarga) : undefined,
+        hargaDibayar: cleanHarga,
       });
 
       if (res.success) {
@@ -94,6 +95,16 @@ const MemberDetail = () => {
     } finally {
       setSubmittingPerpanjang(false);
     }
+  };
+
+  const handleCustomHargaChange = (e) => {
+    const rawVal = e.target.value.replace(/\D/g, '');
+    if (!rawVal) {
+      setCustomHarga('');
+      return;
+    }
+    const formatted = new Intl.NumberFormat('id-ID').format(rawVal);
+    setCustomHarga(formatted);
   };
 
   const handleGantiKartu = async (uidBaru) => {
@@ -298,14 +309,19 @@ const MemberDetail = () => {
               <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
                 Nominal Dibayar (Opsional)
               </label>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={customHarga}
-                onChange={(e) => setCustomHarga(e.target.value)}
-                placeholder={`Default: ${selectedPaketInfo?.harga || 0}`}
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs"
-              />
+              <div className="relative">
+                <span className="absolute left-3.5 top-2.5 text-xs font-extrabold text-slate-400">
+                  Rp
+                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={customHarga}
+                  onChange={handleCustomHargaChange}
+                  placeholder={`Default: ${selectedPaketInfo ? new Intl.NumberFormat('id-ID').format(selectedPaketInfo.harga) : 0}`}
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-extrabold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
             </div>
 
             <button
